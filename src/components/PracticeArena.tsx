@@ -29,6 +29,7 @@ interface PracticeArenaProps {
   onRecordWordResult: (word: VocabItem, isCorrect: boolean, familiarityOverride?: number) => void;
   onFinishAttempt: (mode: string, score: number, total: number) => void;
   onBack: () => void;
+  backLabel?: string;
   initialTab?: PracticeTab;
 }
 
@@ -49,6 +50,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   onRecordWordResult,
   onFinishAttempt,
   onBack,
+  backLabel = '返回單元書頁',
   initialTab = 'flashcards',
 }) => {
   const [tab, setTab] = useState<PracticeTab>(initialTab);
@@ -244,27 +246,26 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   const currentCardProgress = currentCard ? wordProgressMap[currentCard.key] : undefined;
 
   return (
-    <div className="space-y-6">
-      {/* Top Bar - Big iPad Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-[2rem] p-5 sm:p-6 shadow-sm border-2 border-amber-200">
-        <div className="flex items-center gap-3.5">
+    <div className="h-full flex flex-col gap-3.5 overflow-y-auto no-scrollbar pb-2">
+      {/* Top Bar - Compact Native App Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white rounded-[1.75rem] px-4 py-3 shadow-xs border-2 border-amber-200 shrink-0">
+        <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-extrabold text-base sm:text-lg transition cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-extrabold text-base transition cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
-            返回課文
+            {backLabel}
           </button>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">{unitTitle}</h2>
-            <p className="text-sm text-slate-500 font-bold">iPad 觸控大字闖關區</p>
-          </div>
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 truncate max-w-xs sm:max-w-md">
+            {unitTitle}
+          </h2>
         </div>
 
         {/* Mode Switcher */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-2">
           {[
-            { id: 'flashcards', label: '🃏 點讀閃卡' },
+            { id: 'flashcards', label: '🃏 閃卡' },
             { id: 'quiz', label: '🎧 聽音選擇' },
             { id: 'spelling', label: '🔤 拼字闖關' },
             ...(scramblePool.length > 0 ? [{ id: 'scramble', label: '🚂 句子火車' }] : []),
@@ -272,7 +273,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
             <button
               key={m.id}
               onClick={() => switchTab(m.id as PracticeTab)}
-              className={`px-5 py-3.5 rounded-2xl font-extrabold text-base sm:text-lg transition active:scale-95 cursor-pointer ${
+              className={`px-4 py-2.5 rounded-2xl font-extrabold text-base transition active:scale-95 cursor-pointer ${
                 tab === m.id
                   ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
                   : 'bg-amber-50 text-amber-950 hover:bg-amber-100'
@@ -286,8 +287,8 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
       {/* ==================== TAB 1: EXTRA-LARGE IPAD FLASHCARDS ==================== */}
       {tab === 'flashcards' && currentCard && (
-        <div className="bg-white rounded-[2rem] p-6 sm:p-10 shadow-md border-2 border-amber-200 max-w-3xl mx-auto">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+        <div className="flex-1 bg-white rounded-[2rem] p-5 sm:p-7 shadow-md border-3 border-amber-200 max-w-4xl w-full mx-auto flex flex-col justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-lg font-extrabold text-slate-600">
               字卡 {cardIdx + 1} / {vocab.length}
             </span>
@@ -314,10 +315,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               setFlipped((f) => !f);
               speakEnglish(currentCard.en);
             }}
-            className="perspective-1000 cursor-pointer select-none my-4"
+            className="perspective-1000 cursor-pointer select-none my-3"
           >
             <div
-              className={`relative h-88 sm:h-96 w-full rounded-[2rem] transition-transform duration-500 transform-style-3d ${
+              className={`relative h-68 sm:h-78 w-full rounded-[2rem] transition-transform duration-500 transform-style-3d ${
                 flipped ? 'rotate-y-180' : ''
               }`}
             >

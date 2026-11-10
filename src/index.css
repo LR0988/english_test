@@ -5,6 +5,7 @@
     font-size: 17px;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
   }
 
   @media (min-width: 768px) {
@@ -19,13 +20,21 @@
 
   @media (min-width: 768px) {
     html.font-xl {
-      font-size: 20.5px;
+      font-size: 20px;
     }
   }
 
   body {
     font-family: 'Nunito', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
     touch-action: manipulation;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  input, textarea {
+    user-select: text;
+    -webkit-user-select: text;
   }
 
   button, a, input, label {
@@ -62,7 +71,36 @@
   animation: floatSlow 3.2s ease-in-out infinite;
 }
 
-/* Hide horizontal scrollbar on iPad pill strips while keeping smooth touch scroll */
+@keyframes pageSlideNext {
+  0% {
+    opacity: 0;
+    transform: translateX(36px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes pageSlidePrev {
+  0% {
+    opacity: 0;
+    transform: translateX(-36px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-page-next {
+  animation: pageSlideNext 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.animate-page-prev {
+  animation: pageSlidePrev 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

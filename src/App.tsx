@@ -7,9 +7,9 @@ import {
   Turtle,
   Rabbit,
   BookmarkCheck,
-  Trophy,
   Star,
   ZoomIn,
+  LayoutGrid,
 } from 'lucide-react';
 import {
   supabase,
@@ -25,14 +25,14 @@ import {
   getAllVocabWithUnit,
 } from './data/curriculum';
 import { LoginScreen } from './components/LoginScreen';
+import { HomeLauncher, ShelfTab } from './components/HomeLauncher';
 import { UnitExplorer } from './components/UnitExplorer';
 import { PracticeArena } from './components/PracticeArena';
 import { CultureAndExtras } from './components/CultureAndExtras';
 import { GamesAndChecklist } from './components/GamesAndChecklist';
 
-type NavCategory = 'starter' | 'core' | 'culture' | 'games';
-
 type MainView =
+  | { kind: 'home' }
   | { kind: 'unit'; unitId: string }
   | {
       kind: 'practice';
@@ -40,10 +40,10 @@ type MainView =
       initialTab: 'flashcards' | 'quiz' | 'spelling' | 'scramble';
       isMistakeReview?: boolean;
     }
-  | { kind: 'extras' }
+  | { kind: 'extras'; topic: 'sos' | 'taiwan' | 'clocks' }
   | {
       kind: 'games';
-      sub: 'magic_e' | 'board_game' | 'word_hunt' | 'index_checklist';
+      sub: 'magic_e' | 'board_game' | 'word_hunt' | 'checklist' | 'dictionary';
     };
 
 const AVATAR_CHOICES = ['🦁', '🦖', '🚀', '🦊', '🐼', '🐶', '⚡'];
@@ -59,15 +59,16 @@ export const App: React.FC = () => {
   const [recentAttempts, setRecentAttempts] = useState<QuizAttemptRow[]>([]);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
-  // Default to Extra-Large font mode on iPad for easy reading!
+  // Default to Extra-Large font mode on iPad for easy reading
   const [extraLargeFont, setExtraLargeFont] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     const saved = window.localStorage.getItem('liam_font_xl');
     return saved === null ? true : saved === '1';
   });
 
-  const [activeCategory, setActiveCategory] = useState<NavCategory>('core');
-  const [view, setView] = useState<MainView>({ kind: 'unit', unitId: 'unit-1' });
+  // Step 1: Dedicated Chapter Selection Shelf, Step 2: Page-by-Page Content View
+  const [shelfTab, setShelfTab] = useState<ShelfTab>('core');
+  const [view, setView] = useState<MainView>({ kind: 'home' });
 
   useEffect(() => {
     const root = document.documentElement;
@@ -295,20 +296,6 @@ export const App: React.FC = () => {
       .eq('user_id', session.user.id);
   };
 
-  // Select Category Helper
-  const handleSelectCategory = (cat: NavCategory) => {
-    setActiveCategory(cat);
-    if (cat === 'starter') {
-      setView({ kind: 'unit', unitId: 'starter-vocab' });
-    } else if (cat === 'core') {
-      setView({ kind: 'unit', unitId: 'unit-1' });
-    } else if (cat === 'culture') {
-      setView({ kind: 'unit', unitId: 'halloween' });
-    } else {
-      setView({ kind: 'games', sub: 'magic_e' });
-    }
-  };
-
   // Mistake Review Pool
   const mistakeVocabList = useMemo(() => {
     const all = getAllVocabWithUnit();
@@ -321,7 +308,7 @@ export const App: React.FC = () => {
 
   if (authChecking) {
     return (
-      <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+      <div className="h-[100dvh] bg-amber-50 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="text-7xl animate-bounce">🦁</div>
           <div className="text-2xl font-extrabold text-slate-700">正在開啟 Liam 的英語冒險島...</div>
@@ -342,72 +329,114 @@ export const App: React.FC = () => {
     UNITS_DATA.find(
       (u) =>
         (view.kind === 'unit' || view.kind === 'practice') && u.id === view.unitId
-    ) ?? UNITS_DATA[3];
+    ) ?? UNITS_DATA[5];
+
+  const activeScreenTitle = (() => {
+    if (view.kind === 'unit') {
+      return `${currentUnit.heroEmoji} ${currentUnit.badge}: ${currentUnit.titleEn}`;
+    }
+    if (view.kind === 'practice') {
+      return view.isMistakeReview
+        ? '📌 錯題複習特訓營'
+        : `🎮 ${currentUnit.badge} 闖關練習`;
+    }
+    if (view.kind === 'extras') {
+      if (view.topic === 'sos') return '🚨 緊急求救寫作 SOS';
+      if (view.topic === 'taiwan') return '🌡️ 臺灣城市氣溫播報';
+      return '🕰️ 世界著名時鐘巡禮';
+    }
+    if (view.kind === 'games') {
+      if (view.sub === 'magic_e') return '🪄 Magic e 折疊翻翻卡';
+      if (view.sub === 'board_game') return '🏖️ 沙灘猜拳闖關桌遊';
+      if (view.sub === 'word_hunt') return '🧙🏻‍♀️ 女巫帽尋字雲';
+      if (view.sub === 'checklist') return '📋 全書自我檢核本';
+      return '📖 A–Z 生字點讀字典';
+    }
+    return '';
+  })();
 
   return (
-    <div className="min-h-screen bg-amber-50/70 flex flex-col pb-12">
-      {/* ==================== IPAD-FRIENDLY LARGE STICKY HEADER ==================== */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b-3 border-amber-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
-          {/* Left: Profile & Level */}
-          <div className="flex items-center gap-3.5 relative">
-            <button
-              onClick={() => setShowAvatarPicker((s) => !s)}
-              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-300 to-orange-400 flex items-center justify-center text-4xl shadow-sm cursor-pointer active:scale-95 transition"
-              title="點擊更換小勇士頭像"
-            >
-              {profile?.avatar_emoji ?? '🦁'}
-            </button>
+    <div className="h-[100dvh] bg-amber-50/70 flex flex-col overflow-hidden">
+      {/* ==================== NATIVE IPAD APP TOP BAR ==================== */}
+      <header className="shrink-0 z-30 bg-white/95 backdrop-blur-md border-b-2 border-amber-200 shadow-xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+          {/* Left: Home Screen shows Liam Profile; Inside Chapter shows prominent Back-to-Chapters button */}
+          {view.kind === 'home' ? (
+            <div className="flex items-center gap-3 relative">
+              <button
+                onClick={() => setShowAvatarPicker((s) => !s)}
+                className="w-13 h-13 rounded-2xl bg-gradient-to-br from-amber-300 to-orange-400 flex items-center justify-center text-3xl shadow-xs cursor-pointer active:scale-95 transition"
+                title="點擊更換小勇士頭像"
+              >
+                {profile?.avatar_emoji ?? '🦁'}
+              </button>
 
-            {showAvatarPicker && (
-              <div className="absolute top-16 left-0 bg-white rounded-3xl shadow-2xl border-3 border-amber-300 p-3 flex gap-2 z-50">
-                {AVATAR_CHOICES.map((em) => (
-                  <button
-                    key={em}
-                    onClick={() => pickAvatar(em)}
-                    className="w-13 h-13 rounded-2xl hover:bg-amber-100 active:bg-amber-200 text-3xl cursor-pointer"
-                  >
-                    {em}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="font-extrabold text-slate-900 text-xl sm:text-2xl">
-                  {profile?.display_name ?? 'Liam (黃尚霖)'}
-                </span>
-                <span className="px-3 py-0.5 rounded-full bg-amber-400 text-slate-950 text-sm font-black">
-                  Lv.{level}
-                </span>
-              </div>
-              <div className="flex items-center gap-2.5 mt-1">
-                <div className="w-28 sm:w-36 h-3 rounded-full bg-slate-200 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all"
-                    style={{ width: `${xpInLevel}%` }}
-                  />
+              {showAvatarPicker && (
+                <div className="absolute top-15 left-0 bg-white rounded-3xl shadow-2xl border-3 border-amber-300 p-3 flex gap-2 z-50">
+                  {AVATAR_CHOICES.map((em) => (
+                    <button
+                      key={em}
+                      onClick={() => pickAvatar(em)}
+                      className="w-12 h-12 rounded-2xl hover:bg-amber-100 active:bg-amber-200 text-3xl cursor-pointer"
+                    >
+                      {em}
+                    </button>
+                  ))}
                 </div>
-                <span className="text-sm font-extrabold text-amber-700">
-                  {profile?.total_xp ?? 0} XP
-                </span>
+              )}
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-slate-900 text-lg sm:text-xl">
+                    {profile?.display_name ?? 'Liam (黃尚霖)'}
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-xs sm:text-sm font-black">
+                    Lv.{level}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-24 sm:w-32 h-2.5 rounded-full bg-slate-200 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all"
+                      style={{ width: `${xpInLevel}%` }}
+                    />
+                  </div>
+                  <span className="text-xs sm:text-sm font-extrabold text-amber-700">
+                    {profile?.total_xp ?? 0} XP
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Right: Large Touch Controls for iPad */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Streak & Mastered */}
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-orange-50 border-2 border-orange-200 text-orange-700 text-sm font-extrabold">
-              <Flame className="w-5 h-5 fill-orange-500 text-orange-500" />
-              <span>{profile?.streak_days ?? 1} 天</span>
+          ) : (
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={() => setView({ kind: 'home' })}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-extrabold text-base shadow-sm cursor-pointer shrink-0"
+              >
+                <LayoutGrid className="w-5 h-5 text-amber-300" />
+                <span>章節選單</span>
+              </button>
+              <div className="font-extrabold text-slate-800 text-base sm:text-xl truncate">
+                {activeScreenTitle}
+              </div>
             </div>
+          )}
 
-            <div className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-emerald-50 border-2 border-emerald-200 text-emerald-700 text-sm font-extrabold">
-              <Star className="w-5 h-5 fill-emerald-500 text-emerald-500" />
-              <span>熟記 {masteredCount} 字</span>
-            </div>
+          {/* Right: iPad Quick Controls */}
+          <div className="flex items-center gap-2">
+            {view.kind === 'home' && (
+              <>
+                <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-orange-50 border-2 border-orange-200 text-orange-700 text-sm font-extrabold">
+                  <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
+                  <span>{profile?.streak_days ?? 1} 天</span>
+                </div>
+
+                <div className="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-emerald-50 border-2 border-emerald-200 text-emerald-700 text-sm font-extrabold">
+                  <Star className="w-4 h-4 fill-emerald-500 text-emerald-500" />
+                  <span>熟記 {masteredCount} 字</span>
+                </div>
+              </>
+            )}
 
             {/* Mistake Review Book */}
             <button
@@ -421,209 +450,79 @@ export const App: React.FC = () => {
                   });
                 }
               }}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-extrabold border-2 transition active:scale-95 cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-sm font-extrabold border-2 transition active:scale-95 cursor-pointer ${
                 mistakeVocabList.length > 0
-                  ? 'bg-rose-50 hover:bg-rose-100 border-rose-300 text-rose-700 shadow-xs'
+                  ? 'bg-rose-50 hover:bg-rose-100 border-rose-300 text-rose-700'
                   : 'bg-slate-50 border-slate-200 text-slate-400 cursor-default'
               }`}
             >
-              <BookmarkCheck className="w-5 h-5" />
-              <span>錯題本 ({mistakeVocabList.length})</span>
+              <BookmarkCheck className="w-4 h-4" />
+              <span>錯題 ({mistakeVocabList.length})</span>
             </button>
 
             {/* Speech Speed Toggle */}
             <button
               onClick={toggleSpeechSpeed}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-extrabold border-2 cursor-pointer active:scale-95 transition ${
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-sm font-extrabold border-2 cursor-pointer active:scale-95 transition ${
                 isSlowSpeech
-                  ? 'bg-teal-600 text-white border-teal-700 shadow-sm'
+                  ? 'bg-teal-600 text-white border-teal-700'
                   : 'bg-sky-50 hover:bg-sky-100 text-sky-900 border-sky-200'
               }`}
             >
-              {isSlowSpeech ? <Turtle className="w-5 h-5" /> : <Rabbit className="w-5 h-5" />}
-              <span>{isSlowSpeech ? '慢速跟讀' : '正常語速'}</span>
+              {isSlowSpeech ? <Turtle className="w-4 h-4" /> : <Rabbit className="w-4 h-4" />}
+              <span className="hidden sm:inline">{isSlowSpeech ? '慢速' : '正常'}</span>
             </button>
 
             {/* Font Size Toggle (A / A+) */}
             <button
               onClick={() => setExtraLargeFont((v) => !v)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl text-sm font-extrabold border-2 cursor-pointer active:scale-95 transition ${
+              className={`inline-flex items-center gap-1 px-3 py-2 rounded-2xl text-sm font-extrabold border-2 cursor-pointer active:scale-95 transition ${
                 extraLargeFont
-                  ? 'bg-amber-500 text-white border-amber-600 shadow-sm'
+                  ? 'bg-amber-500 text-white border-amber-600'
                   : 'bg-slate-100 text-slate-700 border-slate-200'
               }`}
               title="切換特大字體模式"
             >
-              <ZoomIn className="w-5 h-5" />
-              <span>{extraLargeFont ? '特大字 A+' : '標準字 A'}</span>
+              <ZoomIn className="w-4 h-4" />
+              <span>{extraLargeFont ? 'A+' : 'A'}</span>
             </button>
 
-            {/* Cloud Sync Status */}
+            {/* Cloud Sync Indicator */}
             <div
-              className="inline-flex items-center gap-1 px-3 py-2.5 rounded-2xl bg-slate-100 text-slate-600 text-xs font-extrabold"
+              className="inline-flex items-center gap-1 px-2.5 py-2 rounded-2xl bg-slate-100 text-slate-600 text-xs font-extrabold"
               title="學習進度自動同步至 Supabase"
             >
               <Cloud className={`w-4 h-4 ${syncing ? 'animate-pulse text-sky-500' : 'text-emerald-600'}`} />
-              <span className="hidden xl:inline">{syncing ? '同步中' : '已同步'}</span>
             </div>
 
-            {/* Sign Out */}
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="p-2.5 rounded-2xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 active:scale-95 transition cursor-pointer"
-              title="登出"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+            {view.kind === 'home' && (
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="p-2 rounded-2xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 active:scale-95 transition cursor-pointer"
+                title="登出"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* ==================== IPAD FULL-WIDTH TOP NAVIGATION BAR ==================== */}
-      <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 pt-5 space-y-3.5">
-        {/* Row 1: 4 Big Section Tabs */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { id: 'starter' as const, emoji: '🐾', title: '一、課前複習', sub: 'Starter & Get Ready' },
-            { id: 'core' as const, emoji: '🌬️', title: '二、核心單元', sub: 'Units 1–4 & Reviews' },
-            { id: 'culture' as const, emoji: '🎃', title: '三、節慶與跨域', sub: '萬聖節・氣溫・時鐘' },
-            { id: 'games' as const, emoji: '🪄', title: '四、遊戲與檢核', sub: 'Magic e・桌遊・索引' },
-          ].map((sec) => {
-            const isSelected = activeCategory === sec.id;
-            return (
-              <button
-                key={sec.id}
-                onClick={() => handleSelectCategory(sec.id)}
-                className={`p-3.5 sm:p-4 rounded-3xl border-3 text-left flex items-center gap-3 transition active:scale-[0.98] cursor-pointer ${
-                  isSelected
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                    : 'bg-white hover:bg-amber-50 text-slate-800 border-amber-200'
-                }`}
-              >
-                <span className="text-3xl shrink-0">{sec.emoji}</span>
-                <div className="min-w-0">
-                  <div className="font-extrabold text-base sm:text-lg leading-tight">
-                    {sec.title}
-                  </div>
-                  <div
-                    className={`text-xs font-bold truncate mt-0.5 ${
-                      isSelected ? 'text-amber-300' : 'text-slate-500'
-                    }`}
-                  >
-                    {sec.sub}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+      {/* ==================== SINGLE-VIEWPORT APP STAGE ==================== */}
+      <main className="flex-1 min-h-0 max-w-6xl w-full mx-auto px-4 sm:px-6 py-3 overflow-hidden">
+        {view.kind === 'home' && (
+          <HomeLauncher
+            shelfTab={shelfTab}
+            onChangeShelfTab={setShelfTab}
+            wordProgressMap={wordProgressMap}
+            completedItems={completedItems}
+            recentAttempts={recentAttempts}
+            onOpenUnit={(unitId) => setView({ kind: 'unit', unitId })}
+            onOpenExtraTopic={(topic) => setView({ kind: 'extras', topic })}
+            onOpenGame={(sub) => setView({ kind: 'games', sub })}
+          />
+        )}
 
-        {/* Row 2: Large Touchable Unit Pills for Active Category */}
-        <div className="bg-white rounded-3xl p-3 border-2 border-amber-200 shadow-xs flex items-center gap-2.5 overflow-x-auto no-scrollbar">
-          {activeCategory === 'starter' &&
-            UNITS_DATA.filter((u) => u.section === 'starter').map((u) => {
-              const active =
-                (view.kind === 'unit' || view.kind === 'practice') && view.unitId === u.id;
-              return (
-                <button
-                  key={u.id}
-                  onClick={() => setView({ kind: 'unit', unitId: u.id })}
-                  className={`px-5 py-3.5 rounded-2xl font-extrabold text-base sm:text-lg whitespace-nowrap flex items-center gap-2.5 transition active:scale-95 cursor-pointer ${
-                    active
-                      ? 'bg-amber-500 text-white shadow-md'
-                      : 'bg-amber-50/80 hover:bg-amber-100 text-slate-800'
-                  }`}
-                >
-                  <span className="text-2xl">{u.heroEmoji}</span>
-                  <span>{u.badge}：{u.titleZh.split('（')[0]}</span>
-                </button>
-              );
-            })}
-
-          {activeCategory === 'core' &&
-            UNITS_DATA.filter((u) => u.section === 'core').map((u) => {
-              const active =
-                (view.kind === 'unit' || view.kind === 'practice') && view.unitId === u.id;
-              return (
-                <button
-                  key={u.id}
-                  onClick={() => setView({ kind: 'unit', unitId: u.id })}
-                  className={`px-5 py-3.5 rounded-2xl font-extrabold text-base sm:text-lg whitespace-nowrap flex items-center gap-2.5 transition active:scale-95 cursor-pointer ${
-                    active
-                      ? 'bg-sky-600 text-white shadow-md'
-                      : 'bg-sky-50/80 hover:bg-sky-100 text-slate-800'
-                  }`}
-                >
-                  <span className="text-2xl">{u.heroEmoji}</span>
-                  <span>
-                    {u.badge}: {u.titleEn}
-                  </span>
-                </button>
-              );
-            })}
-
-          {activeCategory === 'culture' && (
-            <>
-              {UNITS_DATA.filter((u) => u.section === 'culture').map((u) => {
-                const active =
-                  (view.kind === 'unit' || view.kind === 'practice') && view.unitId === u.id;
-                return (
-                  <button
-                    key={u.id}
-                    onClick={() => setView({ kind: 'unit', unitId: u.id })}
-                    className={`px-5 py-3.5 rounded-2xl font-extrabold text-base sm:text-lg whitespace-nowrap flex items-center gap-2.5 transition active:scale-95 cursor-pointer ${
-                      active
-                        ? 'bg-purple-600 text-white shadow-md'
-                        : 'bg-purple-50 hover:bg-purple-100 text-slate-800'
-                    }`}
-                  >
-                    <span className="text-2xl">{u.heroEmoji}</span>
-                    <span>萬聖節 Halloween (p.79–83)</span>
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setView({ kind: 'extras' })}
-                className={`px-5 py-3.5 rounded-2xl font-extrabold text-base sm:text-lg whitespace-nowrap flex items-center gap-2.5 transition active:scale-95 cursor-pointer ${
-                  view.kind === 'extras'
-                    ? 'bg-rose-600 text-white shadow-md'
-                    : 'bg-rose-50 hover:bg-rose-100 text-slate-800'
-                }`}
-              >
-                <span className="text-2xl">🌏</span>
-                <span>緊急求救寫作・臺灣城市氣溫・世界著名時鐘 (p.84–91)</span>
-              </button>
-            </>
-          )}
-
-          {activeCategory === 'games' &&
-            [
-              { sub: 'magic_e' as const, emoji: '🪄', title: 'Magic e 折疊翻翻卡' },
-              { sub: 'board_game' as const, emoji: '🏖️', title: '沙灘猜拳闖關桌遊' },
-              { sub: 'word_hunt' as const, emoji: '🧙🏻‍♀️', title: '女巫帽尋字雲 (p.112)' },
-              { sub: 'index_checklist' as const, emoji: '📋', title: '自我檢核表 ＆ A–Z 索引' },
-            ].map((g) => {
-              const active = view.kind === 'games' && view.sub === g.sub;
-              return (
-                <button
-                  key={g.sub}
-                  onClick={() => setView({ kind: 'games', sub: g.sub })}
-                  className={`px-5 py-3.5 rounded-2xl font-extrabold text-base sm:text-lg whitespace-nowrap flex items-center gap-2.5 transition active:scale-95 cursor-pointer ${
-                    active
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'bg-emerald-50 hover:bg-emerald-100 text-slate-800'
-                  }`}
-                >
-                  <span className="text-2xl">{g.emoji}</span>
-                  <span>{g.title}</span>
-                </button>
-              );
-            })}
-        </div>
-      </div>
-
-      {/* ==================== FULL-WIDTH MAIN CONTENT FOR IPAD ==================== */}
-      <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 flex-1 space-y-8">
         {view.kind === 'unit' && (
           <UnitExplorer
             unit={currentUnit}
@@ -660,50 +559,33 @@ export const App: React.FC = () => {
                 total
               )
             }
+            backLabel={view.isMistakeReview ? '返回章節選單' : '返回單元書頁'}
             onBack={() =>
-              setView({
-                kind: 'unit',
-                unitId: view.isMistakeReview ? 'unit-1' : currentUnit.id,
-              })
+              view.isMistakeReview
+                ? setView({ kind: 'home' })
+                : setView({ kind: 'unit', unitId: currentUnit.id })
             }
             initialTab={view.initialTab}
           />
         )}
 
-        {view.kind === 'extras' && <CultureAndExtras />}
+        {view.kind === 'extras' && (
+          <CultureAndExtras
+            topic={view.topic}
+            onBackHome={() => setView({ kind: 'home' })}
+          />
+        )}
 
         {view.kind === 'games' && (
           <GamesAndChecklist
             activeSubView={view.sub}
             completedItems={completedItems}
             onToggleItem={handleToggleItem}
-            onAwardXp={(xp, mode) => handleFinishAttempt('games', mode, 1, 1).then(() => addXp(xp))}
+            onAwardXp={(xp, mode) =>
+              handleFinishAttempt('games', mode, 1, 1).then(() => addXp(xp))
+            }
+            onBackHome={() => setView({ kind: 'home' })}
           />
-        )}
-
-        {/* Recent Quiz Achievements Strip at Bottom */}
-        {recentAttempts.length > 0 && (
-          <section className="bg-white rounded-3xl p-5 shadow-xs border-2 border-amber-200">
-            <div className="text-base font-extrabold text-slate-700 flex items-center gap-2 mb-3">
-              <Trophy className="w-5 h-5 text-amber-500" />
-              Liam 最新闖關榮譽榜
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              {recentAttempts.slice(0, 4).map((att, idx) => (
-                <div
-                  key={att.id ?? idx}
-                  className="text-base bg-amber-50/70 border border-amber-200 rounded-2xl px-4 py-3 flex items-center justify-between font-extrabold text-slate-800"
-                >
-                  <span className="truncate mr-2">
-                    {att.unit_id} ({att.mode})
-                  </span>
-                  <span className="text-amber-600 shrink-0">
-                    {att.score}/{att.total_questions} {'⭐'.repeat(att.stars_earned)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
         )}
       </main>
     </div>

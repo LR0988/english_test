@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Volume2,
-  Sparkles,
+  Turtle,
   Search,
   CheckSquare,
   Square,
@@ -16,16 +16,18 @@ import {
   getAllVocabWithUnit,
 } from '../data/curriculum';
 import { speakEnglish, playSuccessChime, playGentleRetry } from '../lib/speech';
+import { PagedBookFrame, BookPageSpec } from './PagedBookFrame';
 
 interface GamesAndChecklistProps {
-  activeSubView: 'magic_e' | 'board_game' | 'word_hunt' | 'index_checklist';
+  activeSubView: 'magic_e' | 'board_game' | 'word_hunt' | 'checklist' | 'dictionary';
   completedItems: Record<string, boolean>;
   onToggleItem: (itemKey: string, category: 'checklist' | 'word_hunt' | 'magic_e') => void;
   onAwardXp: (xp: number, mode: string) => void;
+  onBackHome: () => void;
 }
 
 const BOARD_TILES = [
-  { pos: 0, label: '🏖️ 起點 Start', q: '', a: '', options: [] as string[] },
+  { pos: 0, label: '🏖️ 起點', q: '', a: '', options: [] as string[] },
   {
     pos: 1,
     label: '☀️ 天氣關',
@@ -56,28 +58,28 @@ const BOARD_TILES = [
   },
   {
     pos: 5,
-    label: '🪄 Magic e 關',
+    label: '🪄 Magic e',
     q: '把 kit（工具箱）加上字尾 e 變成風箏：',
     a: 'kite',
     options: ['kite', 'cute', 'cape'],
   },
   {
     pos: 6,
-    label: '🌧️ 城市氣象關',
+    label: '🌧️ 氣象關',
     q: '臺中是陰天怎麼說？',
     a: "It's cloudy in Taichung.",
     options: ["It's cloudy in Taichung.", 'Time to go home.', 'Raise your hand.'],
   },
   {
     pos: 7,
-    label: '🪖 防災安全關',
+    label: '🪖 防災關',
     q: '地震保命三步驟：Drop! Cover! ___!',
     a: 'Hold on!',
     options: ['Hold on!', 'Wake up!', 'Be quiet.'],
   },
   {
     pos: 8,
-    label: '🎃 萬聖節終點島',
+    label: '🎃 終點島',
     q: '不給糖就搗蛋怎麼說？',
     a: 'Trick or treat!',
     options: ['Trick or treat!', 'Line up, please.', 'How come?'],
@@ -97,17 +99,31 @@ const CLOUD_DISTRACTORS = [
   'water',
 ];
 
+function chunkList<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
   activeSubView,
   completedItems,
   onToggleItem,
   onAwardXp,
+  onBackHome,
 }) => {
+  const [pageIdx, setPageIdx] = useState(0);
   const [foldedMap, setFoldedMap] = useState<Record<string, boolean>>({});
   const [playerPos, setPlayerPos] = useState(0);
-  const [rpsMessage, setRpsMessage] = useState('點選「剪刀・石頭・布」贏過 Boka 就能前進闖關！');
+  const [rpsMessage, setRpsMessage] = useState('點選「剪刀・石頭・布」贏過 Boka 前進闖關！');
   const [pendingTileIdx, setPendingTileIdx] = useState<number | null>(null);
   const [boardWon, setBoardWon] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [letterFilter, setLetterFilter] = useState('ALL');
+
+  useEffect(() => {
+    setPageIdx(0);
+  }, [activeSubView, letterFilter, searchQuery]);
 
   const playRps = (choice: 'rock' | 'paper' | 'scissors') => {
     if (pendingTileIdx !== null || boardWon) return;
@@ -116,7 +132,7 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
     const emojiMap = { rock: '✊ 石頭', paper: '✋ 布', scissors: '✌️ 剪刀' };
 
     if (choice === bot) {
-      setRpsMessage(`平手！Liam 出 ${emojiMap[choice]}，Boka 也出 ${emojiMap[bot]}，再出一次拳！`);
+      setRpsMessage(`平手！Liam 與 Boka 都出 ${emojiMap[choice]}，再出一次！`);
       return;
     }
 
@@ -127,14 +143,12 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
 
     if (!win) {
       playGentleRetry();
-      setRpsMessage(`哎呀！Boka 出 ${emojiMap[bot]} 贏了，答對題目仍可前進 1 格喔！`);
-      const step = Math.min(BOARD_TILES.length - 1, playerPos + 1);
-      setPendingTileIdx(step);
+      setRpsMessage(`Boka 出 ${emojiMap[bot]} 贏了！答對題目仍可前進 1 格！`);
+      setPendingTileIdx(Math.min(BOARD_TILES.length - 1, playerPos + 1));
     } else {
       playSuccessChime();
-      const jump = 2;
-      const step = Math.min(BOARD_TILES.length - 1, playerPos + jump);
-      setRpsMessage(`🎉 猜拳獲勝！Liam 出 ${emojiMap[choice]} 贏了 ${emojiMap[bot]}！答對題目直衝第 ${step} 格！`);
+      const step = Math.min(BOARD_TILES.length - 1, playerPos + 2);
+      setRpsMessage(`🎉 猜拳獲勝！Liam 出 ${emojiMap[choice]} 贏了 ${emojiMap[bot]}！答對衝第 ${step} 格！`);
       setPendingTileIdx(step);
     }
   };
@@ -153,7 +167,7 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
         onAwardXp(30, 'board_game');
         setRpsMessage('🏆 恭喜 Liam 成功抵達沙灘終點島！獲得 +30 XP！');
       } else {
-        setRpsMessage(`✅ 答對了！「${tile.a}」成功佔領第 ${pendingTileIdx} 格！繼續出拳吧！`);
+        setRpsMessage(`✅ 答對了！「${tile.a}」成功佔領第 ${pendingTileIdx} 格！繼續出拳！`);
       }
     } else {
       playGentleRetry();
@@ -183,8 +197,6 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
 
   const foundHuntCount = WORD_HUNT_TARGETS.filter((t) => completedItems[t.key]).length;
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [letterFilter, setLetterFilter] = useState('ALL');
   const allIndexedWords = useMemo(() => {
     const raw = getAllVocabWithUnit();
     const map = new Map<string, (typeof raw)[0]>();
@@ -197,10 +209,368 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
     );
   }, []);
 
-  const filteredIndexWords = allIndexedWords.filter((w) => {
+  // ==================== 1. GIANT 1-CARD-PER-PAGE MAGIC E BOOK ====================
+  if (activeSubView === 'magic_e') {
+    const magicPages: BookPageSpec[] = MAGIC_E_PAIRS.map((pair, idx) => {
+      const hasE = !!foldedMap[pair.shortWord];
+      const keyId = `magice_${pair.shortWord}`;
+      return {
+        id: `magic-${pair.shortWord}`,
+        shortTag: pair.vowel,
+        title: `Magic e 折疊字卡（${idx + 1} / ${MAGIC_E_PAIRS.length}）`,
+        render: () => (
+          <div className="max-w-2xl mx-auto w-full space-y-6 text-center">
+            <div className="text-lg font-extrabold text-slate-600">
+              👆 用手指點下方大字卡，把右邊的魔法 <code className="text-amber-700 font-black">e</code> 摺進來！
+            </div>
+
+            <div
+              onClick={() => {
+                const next = !hasE;
+                setFoldedMap((p) => ({ ...p, [pair.shortWord]: next }));
+                speakEnglish(next ? pair.longWord : pair.shortWord);
+                playSuccessChime();
+                if (next && !completedItems[keyId]) {
+                  onToggleItem(keyId, 'magic_e');
+                }
+              }}
+              className={`rounded-[2.5rem] border-4 p-8 sm:p-12 cursor-pointer transition active:scale-[0.98] select-none ${
+                hasE
+                  ? 'bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 text-white border-amber-500 shadow-2xl'
+                  : 'bg-amber-50 hover:bg-amber-100/80 text-slate-900 border-amber-300 shadow-md'
+              }`}
+            >
+              <div className="text-8xl mb-4">
+                {hasE ? pair.longEmoji : pair.shortEmoji}
+              </div>
+
+              <div className="flex items-center justify-center gap-2 my-4">
+                <span className="text-6xl sm:text-7xl font-black tracking-wider">
+                  {hasE ? pair.longWord.slice(0, -1) : pair.shortWord}
+                </span>
+                <span
+                  className={`inline-flex items-center justify-center w-18 h-22 sm:w-20 sm:h-24 rounded-3xl font-black text-6xl sm:text-7xl transition-all duration-300 border-l-4 border-dashed ${
+                    hasE
+                      ? 'bg-white text-rose-600 border-rose-300 scale-105 shadow-xl ml-1'
+                      : 'bg-slate-200/80 text-slate-400 border-slate-300 scale-90 opacity-45 ml-4'
+                  }`}
+                >
+                  e
+                </span>
+              </div>
+
+              <div className="text-3xl sm:text-4xl font-extrabold mt-4">
+                {hasE ? `${pair.longWord} — ${pair.longZh}` : `${pair.shortWord} — ${pair.shortZh}`}
+              </div>
+              <div className={`text-lg font-bold mt-3 ${hasE ? 'text-amber-50' : 'text-slate-500'}`}>
+                {hasE ? '✨ 已變身長母音！再點一下打開字尾 e' : '👆 點一下摺入魔法 e 變身長母音！'}
+              </div>
+            </div>
+
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => speakEnglish(pair.shortWord, 0.85)}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-100 text-slate-900 font-extrabold text-lg cursor-pointer active:scale-95"
+              >
+                <Volume2 className="w-5 h-5" />
+                短母音：{pair.shortWord}
+              </button>
+              <button
+                onClick={() => speakEnglish(pair.longWord, 0.85)}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-amber-500 text-white font-extrabold text-lg cursor-pointer active:scale-95 shadow-sm"
+              >
+                <Turtle className="w-5 h-5" />
+                長母音：{pair.longWord}
+              </button>
+            </div>
+          </div>
+        ),
+      };
+    });
+
+    return (
+      <PagedBookFrame
+        pages={magicPages}
+        currentIndex={pageIdx}
+        onChangeIndex={setPageIdx}
+        finishAction={{ label: '🏠 回魔法遊戲館', onClick: onBackHome }}
+      />
+    );
+  }
+
+  // ==================== 2. SINGLE-SCREEN BEACH BOARD GAME ====================
+  if (activeSubView === 'board_game') {
+    const activeQuestionTile = pendingTileIdx !== null ? BOARD_TILES[pendingTileIdx] : null;
+    const gamePages: BookPageSpec[] = [
+      {
+        id: 'beach-rps',
+        shortTag: '🏖️ 沙灘闖關',
+        title: 'Rock, Paper, Scissors 沙灘猜拳桌遊',
+        render: () => (
+          <div className="space-y-5">
+            {/* Top Status & RPS Controls */}
+            <div className="bg-amber-50 rounded-3xl p-5 border-2 border-amber-300 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Dices className="w-9 h-9 text-amber-500 shrink-0" />
+                <p className="text-xl sm:text-2xl font-extrabold text-slate-900">{rpsMessage}</p>
+              </div>
+
+              {pendingTileIdx === null && !boardWon ? (
+                <div className="flex gap-3 shrink-0">
+                  <button
+                    onClick={() => playRps('scissors')}
+                    className="px-6 py-4 rounded-2xl bg-amber-400 text-slate-950 font-extrabold text-xl shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    ✌️ 剪刀
+                  </button>
+                  <button
+                    onClick={() => playRps('rock')}
+                    className="px-6 py-4 rounded-2xl bg-sky-500 text-white font-extrabold text-xl shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    ✊ 石頭
+                  </button>
+                  <button
+                    onClick={() => playRps('paper')}
+                    className="px-6 py-4 rounded-2xl bg-emerald-500 text-white font-extrabold text-xl shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    ✋ 布
+                  </button>
+                </div>
+              ) : boardWon ? (
+                <button
+                  onClick={() => {
+                    setPlayerPos(0);
+                    setPendingTileIdx(null);
+                    setBoardWon(false);
+                    setRpsMessage('新的一局開始！請出拳前進！');
+                  }}
+                  className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl bg-amber-500 text-white font-extrabold text-xl cursor-pointer active:scale-95"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                  再玩一局
+                </button>
+              ) : null}
+            </div>
+
+            {/* If answering a tile question, show giant question panel; otherwise show 3x3 board */}
+            {activeQuestionTile ? (
+              <div className="bg-sky-50 rounded-3xl p-7 border-3 border-sky-400 space-y-5">
+                <div className="flex items-center justify-between">
+                  <span className="px-4 py-1.5 rounded-full bg-sky-600 text-white text-base font-extrabold">
+                    第 {activeQuestionTile.pos} 格挑戰：{activeQuestionTile.label}
+                  </span>
+                  <button
+                    onClick={() => speakEnglish(activeQuestionTile.q.replace(/\(.*\)/, ''))}
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-sky-600 text-white font-extrabold text-lg cursor-pointer active:scale-95"
+                  >
+                    <Volume2 className="w-5 h-5" />
+                    唸題目
+                  </button>
+                </div>
+                <div className="text-3xl font-black text-slate-900">{activeQuestionTile.q}</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {activeQuestionTile.options.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => answerBoardQuestion(opt)}
+                      className="p-5 rounded-3xl bg-white border-3 border-sky-200 hover:border-sky-500 font-extrabold text-2xl text-slate-900 text-left cursor-pointer active:scale-95 shadow-sm"
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3.5">
+                {BOARD_TILES.map((t) => {
+                  const isHere = playerPos === t.pos;
+                  const passed = playerPos > t.pos;
+                  return (
+                    <div
+                      key={t.pos}
+                      className={`p-4 rounded-3xl border-3 text-center flex flex-col items-center justify-between min-h-28 ${
+                        isHere
+                          ? 'bg-amber-400 border-amber-600 text-slate-950 shadow-lg'
+                          : passed
+                            ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
+                            : 'bg-slate-50 border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <span className="text-xs font-black">#{t.pos}</span>
+                      <div className="text-4xl my-1">{isHere ? '🦁' : passed ? '⭐' : '🐚'}</div>
+                      <span className="text-base sm:text-lg font-extrabold">{t.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ),
+      },
+    ];
+
+    return (
+      <PagedBookFrame
+        pages={gamePages}
+        currentIndex={0}
+        onChangeIndex={() => {}}
+        finishAction={{ label: '🏠 回魔法遊戲館', onClick: onBackHome }}
+      />
+    );
+  }
+
+  // ==================== 3. PAGED WORD HUNT ====================
+  if (activeSubView === 'word_hunt') {
+    const huntPages: BookPageSpec[] = [
+      {
+        id: 'hunt-cloud',
+        shortTag: '🧙🏻‍♀️ 女巫帽尋字雲',
+        title: `女巫帽尋字進度：${foundHuntCount} / ${WORD_HUNT_TARGETS.length}`,
+        render: () => (
+          <div className="rounded-3xl bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 text-white p-6 sm:p-8 space-y-5 text-center">
+            <div className="text-xl font-extrabold text-amber-300">
+              🔍 點擊單字找出課本指定的 14 個通關字！（已找到 {foundHuntCount} / {WORD_HUNT_TARGETS.length}）
+            </div>
+            <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
+              {witchCloudWords.map((item) => {
+                const found = item.isTarget && !!completedItems[item.key];
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      speakEnglish(item.word);
+                      if (item.isTarget) {
+                        playSuccessChime();
+                        if (!found) {
+                          onToggleItem(item.key, 'word_hunt');
+                          if (foundHuntCount + 1 === WORD_HUNT_TARGETS.length) {
+                            confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+                            onAwardXp(25, 'word_hunt');
+                          }
+                        }
+                      } else {
+                        playGentleRetry();
+                      }
+                    }}
+                    className={`px-5 py-3 rounded-full font-extrabold text-xl sm:text-2xl transition active:scale-95 cursor-pointer ${
+                      found
+                        ? 'bg-amber-400 text-slate-950 shadow-lg scale-105'
+                        : 'bg-white/15 hover:bg-white/25 text-white border-2 border-white/25'
+                    }`}
+                  >
+                    {found ? `⭐ ${item.word}` : item.word}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'hunt-clues',
+        shortTag: '📋 尋字線索表',
+        title: '14 個指定通關單字檢核表',
+        render: () => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {WORD_HUNT_TARGETS.map((t) => {
+              const done = !!completedItems[t.key];
+              return (
+                <div
+                  key={t.key}
+                  onClick={() => done && speakEnglish(t.word)}
+                  className={`p-4 rounded-2xl border-2 text-lg font-extrabold flex items-center justify-between ${
+                    done
+                      ? 'bg-emerald-50 border-emerald-400 text-emerald-950 cursor-pointer'
+                      : 'bg-slate-50 border-slate-200 text-slate-600'
+                  }`}
+                >
+                  <span>🔍 {t.hintZh}</span>
+                  <span>{done ? `✅ ${t.word}` : '❓ 未尋獲'}</span>
+                </div>
+              );
+            })}
+          </div>
+        ),
+      },
+    ];
+
+    return (
+      <PagedBookFrame
+        pages={huntPages}
+        currentIndex={pageIdx}
+        onChangeIndex={setPageIdx}
+        finishAction={{ label: '🏠 回魔法遊戲館', onClick: onBackHome }}
+      />
+    );
+  }
+
+  // ==================== 4. PAGED SELF-CHECKLIST BOOK (1 Unit per Page!) ====================
+  if (activeSubView === 'checklist') {
+    const checkUnits = UNITS_DATA.filter((u) => u.checklistItems && u.checklistItems.length > 0);
+    const checkPages: BookPageSpec[] = checkUnits.map((u) => ({
+      id: `chk-${u.id}`,
+      shortTag: `${u.heroEmoji} ${u.badge}`,
+      title: `${u.badge} 自我檢核表（pp.103–108）`,
+      render: () => (
+        <div className="space-y-5 max-w-3xl mx-auto w-full">
+          <div className="flex items-center gap-3">
+            <span className="text-5xl">{u.heroEmoji}</span>
+            <div>
+              <h3 className="text-3xl font-black text-slate-900">
+                {u.badge}: {u.titleEn}
+              </h3>
+              <p className="text-lg font-bold text-slate-600">{u.titleZh}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3.5">
+            {u.checklistItems!.map((chk) => {
+              const done = !!completedItems[chk.key];
+              return (
+                <button
+                  key={chk.key}
+                  onClick={() => {
+                    onToggleItem(chk.key, 'checklist');
+                    if (!done) playSuccessChime();
+                  }}
+                  className={`w-full p-5 rounded-3xl border-3 text-left flex items-center gap-4 cursor-pointer active:scale-[0.99] transition ${
+                    done
+                      ? 'bg-emerald-50 border-emerald-400 text-emerald-950 shadow-xs'
+                      : 'bg-slate-50 border-slate-200 text-slate-800'
+                  }`}
+                >
+                  {done ? (
+                    <CheckSquare className="w-8 h-8 text-emerald-600 shrink-0" />
+                  ) : (
+                    <Square className="w-8 h-8 text-slate-400 shrink-0" />
+                  )}
+                  <div>
+                    <div className="text-xl font-extrabold">{chk.labelZh}</div>
+                    <div className="text-base font-bold text-slate-500">{chk.labelEn}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ),
+    }));
+
+    return (
+      <PagedBookFrame
+        pages={checkPages}
+        currentIndex={pageIdx}
+        onChangeIndex={setPageIdx}
+        finishAction={{ label: '🏠 回魔法遊戲館', onClick: onBackHome }}
+      />
+    );
+  }
+
+  // ==================== 5. PAGED A-Z DICTIONARY (6 Giant Words per Page!) ====================
+  const alphabet = ['ALL', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
+  const filteredWords = allIndexedWords.filter((w) => {
     const matchesLetter =
-      letterFilter === 'ALL' ||
-      w.spellTarget[0]?.toUpperCase() === letterFilter;
+      letterFilter === 'ALL' || w.spellTarget[0]?.toUpperCase() === letterFilter;
     const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
       !q ||
@@ -210,426 +580,104 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
     return matchesLetter && matchesSearch;
   });
 
-  // ==================== 1. MAGIC E FLIP CARDS ====================
-  if (activeSubView === 'magic_e') {
-    return (
-      <div className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border-2 border-amber-200 space-y-6">
-        <div>
-          <span className="text-sm font-extrabold px-4 py-1 rounded-full bg-amber-100 text-amber-900">
-            書末拉頁配件｜Magic e 折疊翻翻字卡
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
-            🪄 Magic e 魔法字尾大翻翻卡
-          </h2>
-          <p className="text-lg text-slate-600 font-bold mt-1">
-            用手指點一下字卡，把右邊的魔法 <code className="font-black text-amber-700">e</code> 摺進來，聽聽短母音一秒變長母音！
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {MAGIC_E_PAIRS.map((pair) => {
-            const hasE = !!foldedMap[pair.shortWord];
-            const keyId = `magice_${pair.shortWord}`;
-            return (
-              <div
-                key={pair.shortWord}
-                onClick={() => {
-                  const next = !hasE;
-                  setFoldedMap((p) => ({ ...p, [pair.shortWord]: next }));
-                  speakEnglish(next ? pair.longWord : pair.shortWord);
-                  playSuccessChime();
-                  if (next && !completedItems[keyId]) {
-                    onToggleItem(keyId, 'magic_e');
-                  }
-                }}
-                className={`rounded-3xl border-4 p-6 sm:p-7 cursor-pointer transition active:scale-[0.98] select-none ${
-                  hasE
-                    ? 'bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 text-white border-amber-500 shadow-xl'
-                    : 'bg-amber-50/70 hover:bg-amber-100/70 text-slate-900 border-amber-200'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span
-                    className={`text-base font-extrabold px-3.5 py-1 rounded-full ${
-                      hasE ? 'bg-white/25 text-white' : 'bg-amber-200 text-amber-950'
-                    }`}
-                  >
-                    {pair.vowel}
-                  </span>
-                  <Volume2 className="w-6 h-6 opacity-85" />
-                </div>
-
-                <div className="flex items-center justify-center gap-2 my-4">
-                  <span className="text-6xl mr-3">
-                    {hasE ? pair.longEmoji : pair.shortEmoji}
-                  </span>
-                  <span className="text-5xl sm:text-6xl font-black tracking-wider">
-                    {hasE ? pair.longWord.slice(0, -1) : pair.shortWord}
-                  </span>
-                  <span
-                    className={`inline-flex items-center justify-center w-14 h-16 rounded-2xl font-black text-5xl sm:text-6xl transition-all duration-300 border-l-3 border-dashed ${
-                      hasE
-                        ? 'bg-white text-rose-600 border-rose-300 scale-105 shadow-lg ml-1'
-                        : 'bg-slate-200/80 text-slate-400 border-slate-300 scale-90 opacity-50 ml-3'
-                    }`}
-                  >
-                    e
-                  </span>
-                </div>
-
-                <div className="text-center">
-                  <div className="text-2xl font-extrabold">
-                    {hasE ? `${pair.longWord}（${pair.longZh}）` : `${pair.shortWord}（${pair.shortZh}）`}
-                  </div>
-                  <div className={`text-base font-bold mt-1.5 ${hasE ? 'text-amber-50' : 'text-slate-500'}`}>
-                    {hasE ? '👆 點一下把 e 打開變回短母音' : '👆 點一下把魔法 e 摺進來！'}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  // ==================== 2. BEACH BOARD GAME ====================
-  if (activeSubView === 'board_game') {
-    const activeQuestionTile = pendingTileIdx !== null ? BOARD_TILES[pendingTileIdx] : null;
-    return (
-      <div className="bg-gradient-to-br from-sky-50 via-amber-50 to-yellow-100 rounded-[2rem] p-6 sm:p-8 shadow-sm border-3 border-amber-300 space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span className="text-sm font-extrabold px-4 py-1 rounded-full bg-sky-600 text-white">
-              書末拉頁桌遊｜Rock, Paper, Scissors
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
-              🏖️ 沙灘猜拳闖關桌遊
-            </h2>
-          </div>
-
-          <button
-            onClick={() => {
-              setPlayerPos(0);
-              setPendingTileIdx(null);
-              setBoardWon(false);
-              setRpsMessage('新的一局開始！請點選剪刀・石頭・布前進！');
-            }}
-            className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-white hover:bg-slate-50 border-2 border-slate-200 text-slate-800 text-base font-extrabold cursor-pointer active:scale-95"
-          >
-            <RotateCcw className="w-5 h-5" />
-            重新開始
-          </button>
-        </div>
-
-        {/* Status & Big RPS Buttons */}
-        <div className="bg-white rounded-3xl p-6 border-2 border-amber-300 space-y-5">
-          <div className="flex items-center gap-3.5">
-            <Dices className="w-10 h-10 text-amber-500 shrink-0" />
-            <p className="text-xl sm:text-2xl font-extrabold text-slate-900">{rpsMessage}</p>
-          </div>
-
-          {pendingTileIdx === null && !boardWon && (
-            <div className="grid grid-cols-3 gap-4">
-              <button
-                onClick={() => playRps('scissors')}
-                className="py-5 rounded-3xl bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-extrabold text-2xl shadow-md cursor-pointer"
-              >
-                ✌️ 剪刀
-              </button>
-              <button
-                onClick={() => playRps('rock')}
-                className="py-5 rounded-3xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-extrabold text-2xl shadow-md cursor-pointer"
-              >
-                ✊ 石頭
-              </button>
-              <button
-                onClick={() => playRps('paper')}
-                className="py-5 rounded-3xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-extrabold text-2xl shadow-md cursor-pointer"
-              >
-                ✋ 布
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Question Card */}
-        {activeQuestionTile && (
-          <div className="bg-white rounded-3xl p-7 border-4 border-sky-400 shadow-xl space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-base font-extrabold px-4 py-1.5 rounded-full bg-sky-100 text-sky-900">
-                第 {activeQuestionTile.pos} 格挑戰：{activeQuestionTile.label}
-              </span>
-              <button
-                onClick={() => speakEnglish(activeQuestionTile.q.replace(/\(.*\)/, ''))}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-sky-600 text-white text-base font-extrabold cursor-pointer active:scale-95"
-              >
-                <Volume2 className="w-5 h-5" />
-                唸題目
-              </button>
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              {activeQuestionTile.q}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {activeQuestionTile.options.map((opt) => (
+  const dictChunks = chunkList(filteredWords, 6);
+  const dictPages: BookPageSpec[] =
+    dictChunks.length === 0
+      ? [
+          {
+            id: 'dict-empty',
+            shortTag: '📖 字典',
+            title: 'A–Z 生字索引字典',
+            render: () => (
+              <div className="space-y-6 text-center">
+                <p className="text-2xl font-extrabold text-slate-500">找不到符合的單字喔！</p>
                 <button
-                  key={opt}
-                  onClick={() => answerBoardQuestion(opt)}
-                  className="p-5 rounded-3xl border-3 border-slate-200 hover:border-sky-400 hover:bg-sky-50 font-extrabold text-xl sm:text-2xl text-slate-900 text-left cursor-pointer active:scale-95 transition"
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 3x3 Spacious Beach Path Grid for iPad */}
-        <div className="grid grid-cols-3 gap-4">
-          {BOARD_TILES.map((t) => {
-            const isHere = playerPos === t.pos;
-            const passed = playerPos > t.pos;
-            return (
-              <div
-                key={t.pos}
-                className={`p-5 rounded-3xl border-3 text-center flex flex-col items-center justify-between min-h-36 transition ${
-                  isHere
-                    ? 'bg-amber-400 border-amber-600 text-slate-950 shadow-lg scale-[1.03]'
-                    : passed
-                      ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
-                      : 'bg-white/95 border-amber-200 text-slate-800'
-                }`}
-              >
-                <span className="text-sm font-black opacity-75">第 {t.pos} 格</span>
-                <div className="text-5xl my-2">{isHere ? '🦁' : passed ? '⭐' : '🐚'}</div>
-                <span className="text-base sm:text-lg font-extrabold">{t.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  // ==================== 3. WITCH'S HAT WORD HUNT ====================
-  if (activeSubView === 'word_hunt') {
-    return (
-      <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 text-white rounded-[2rem] p-6 sm:p-8 shadow-xl space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span className="text-sm font-extrabold px-4 py-1 rounded-full bg-amber-400 text-slate-950">
-              第 112 頁｜Word Hunt 女巫帽尋字雲
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold mt-2">
-              🧙🏻‍♀️ 女巫帽尋字大任務
-            </h2>
-            <p className="text-base sm:text-lg text-purple-200 font-bold mt-1">
-              點擊下方大單字雲，找出課本指定的 14 個通關單字！
-            </p>
-          </div>
-
-          <div className="bg-white/15 backdrop-blur-sm px-6 py-4 rounded-3xl border border-white/25 text-center">
-            <div className="text-sm text-purple-200 font-extrabold">尋獲進度</div>
-            <div className="text-3xl font-black text-amber-300">
-              {foundHuntCount} / {WORD_HUNT_TARGETS.length}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-7 border border-purple-400/30 flex flex-col items-center space-y-4">
-          <div className="text-6xl">🧙🏻‍♀️</div>
-          <div className="flex flex-wrap justify-center gap-3.5 max-w-3xl">
-            {witchCloudWords.map((item) => {
-              const found = item.isTarget && !!completedItems[item.key];
-              return (
-                <button
-                  key={item.key}
                   onClick={() => {
-                    speakEnglish(item.word);
-                    if (item.isTarget) {
-                      playSuccessChime();
-                      if (!found) {
-                        onToggleItem(item.key, 'word_hunt');
-                        if (foundHuntCount + 1 === WORD_HUNT_TARGETS.length) {
-                          confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
-                          onAwardXp(25, 'word_hunt');
-                        }
-                      }
-                    } else {
-                      playGentleRetry();
-                    }
+                    setLetterFilter('ALL');
+                    setSearchQuery('');
                   }}
-                  className={`px-6 py-3.5 rounded-full font-extrabold text-xl sm:text-2xl transition active:scale-95 cursor-pointer ${
-                    found
-                      ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/30 scale-105'
-                      : 'bg-white/15 hover:bg-white/25 text-white border-2 border-white/25'
-                  }`}
+                  className="px-6 py-3.5 rounded-2xl bg-sky-600 text-white font-extrabold text-lg cursor-pointer"
                 >
-                  {found ? `⭐ ${item.word}` : item.word}
+                  顯示全部單字
                 </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {WORD_HUNT_TARGETS.map((t) => {
-            const done = !!completedItems[t.key];
-            return (
-              <div
-                key={t.key}
-                className={`p-4 rounded-2xl border-2 text-base font-extrabold flex items-center justify-between ${
-                  done
-                    ? 'bg-emerald-500/25 border-emerald-400/60 text-emerald-100'
-                    : 'bg-white/5 border-white/15 text-purple-100'
-                }`}
-              >
-                <span>🔍 {t.hintZh}</span>
-                <span className="text-lg">{done ? `✅ ${t.word}` : '❓'}</span>
               </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  // ==================== 4. INDEX & SELF-CHECKLIST ====================
-  const alphabet = ['ALL', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
-
-  return (
-    <div className="space-y-8">
-      <section className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border-2 border-emerald-200 space-y-6">
-        <div className="flex items-center gap-3">
-          <Sparkles className="w-8 h-8 text-emerald-600" />
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            📋 全書自我檢核總表 Self-Checklist（第 103–108 頁）
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5">
-          {UNITS_DATA.filter((u) => u.checklistItems && u.checklistItems.length > 0).map((u) => (
-            <div
-              key={u.id}
-              className="rounded-3xl border-2 border-slate-200 p-5 sm:p-6 space-y-3.5 bg-slate-50/50"
-            >
-              <div className="text-xl sm:text-2xl font-extrabold text-slate-900 flex items-center gap-2.5">
-                <span className="text-3xl">{u.heroEmoji}</span>
-                <span>
-                  {u.badge}: {u.titleEn}
-                </span>
-              </div>
-              <div className="space-y-2.5">
-                {u.checklistItems!.map((chk) => {
-                  const done = !!completedItems[chk.key];
-                  return (
+            ),
+          },
+        ]
+      : dictChunks.map((chunk, idx) => ({
+          id: `dict-page-${idx}`,
+          shortTag: `📖 字典 (${filteredWords.length}字)`,
+          title: `第 ${idx + 1} / ${dictChunks.length} 頁`,
+          render: () => (
+            <div className="space-y-4">
+              {/* Filter Bar */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                  {alphabet.map((letter) => (
                     <button
-                      key={chk.key}
-                      onClick={() => {
-                        onToggleItem(chk.key, 'checklist');
-                        if (!done) playSuccessChime();
-                      }}
-                      className={`w-full p-4 rounded-2xl border-2 text-left flex items-center gap-3.5 cursor-pointer active:scale-[0.99] transition ${
-                        done
-                          ? 'bg-emerald-50 border-emerald-400 text-emerald-950'
-                          : 'bg-white border-slate-200 text-slate-800 hover:bg-amber-50/50'
+                      key={letter}
+                      onClick={() => setLetterFilter(letter)}
+                      className={`min-w-10 h-10 px-2.5 rounded-xl text-sm font-extrabold cursor-pointer shrink-0 ${
+                        letterFilter === letter
+                          ? 'bg-sky-600 text-white'
+                          : 'bg-slate-100 text-slate-700'
                       }`}
                     >
-                      {done ? (
-                        <CheckSquare className="w-7 h-7 text-emerald-600 shrink-0" />
-                      ) : (
-                        <Square className="w-7 h-7 text-slate-400 shrink-0" />
-                      )}
-                      <div>
-                        <div className="text-lg font-extrabold">{chk.labelZh}</div>
-                        <div className="text-base font-bold text-slate-500">{chk.labelEn}</div>
-                      </div>
+                      {letter}
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+                  ))}
+                </div>
 
-      <section className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border-2 border-sky-200 space-y-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              📖 A–Z 全書生字大字索引（第 109–111 頁）
-            </h2>
-            <p className="text-base text-slate-600 font-bold mt-1">
-              共收錄 {allIndexedWords.length} 個課本詞彙，點擊任一單字立即發音！
-            </p>
-          </div>
-
-          <div className="relative w-full md:w-80">
-            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜尋英文或中文解釋..."
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-sky-400 outline-none text-lg font-extrabold"
-            />
-          </div>
-        </div>
-
-        {/* Big Touch Alphabet Filter Pills */}
-        <div className="flex flex-wrap gap-2">
-          {alphabet.map((letter) => (
-            <button
-              key={letter}
-              onClick={() => setLetterFilter(letter)}
-              className={`min-w-11 h-11 px-3 rounded-xl text-base font-extrabold cursor-pointer active:scale-90 ${
-                letterFilter === letter
-                  ? 'bg-sky-600 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              {letter}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[640px] overflow-y-auto pr-1">
-          {filteredIndexWords.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => speakEnglish(item.en)}
-              className="p-4 sm:p-5 rounded-3xl border-2 border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 active:scale-[0.99] flex items-center justify-between text-left cursor-pointer transition"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <span className="text-4xl shrink-0">{item.emoji}</span>
-                <div className="min-w-0">
-                  <div className="font-extrabold text-xl sm:text-2xl text-slate-900 break-words">
-                    {item.en} {item.moe1200 ? <span className="text-amber-600">*</span> : null}
-                  </div>
-                  <div className="text-base sm:text-lg font-bold text-slate-600">{item.zh}</div>
+                <div className="relative w-full md:w-64 shrink-0">
+                  <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="搜尋單字或中文..."
+                    className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-slate-200 focus:border-sky-400 outline-none text-base font-extrabold"
+                  />
                 </div>
               </div>
-              <div className="text-right shrink-0 ml-3">
-                <span
-                  className={`inline-block text-xs font-extrabold px-3 py-1 rounded-full ${
-                    item.tier === 'core'
-                      ? 'bg-slate-900 text-white'
-                      : item.tier === 'phonics'
-                        ? 'bg-emerald-100 text-emerald-900'
-                        : 'bg-sky-100 text-sky-900'
-                  }`}
-                >
-                  {item.unitBadge}
-                </span>
-                {item.page && (
-                  <div className="text-xs text-slate-500 font-bold mt-1">{item.page}</div>
-                )}
+
+              {/* 6 Giant Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {chunk.map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => speakEnglish(item.en)}
+                    className="p-4 sm:p-5 rounded-3xl border-2 border-slate-200 hover:border-sky-400 bg-slate-50/50 active:scale-[0.98] flex items-center justify-between text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <span className="text-4xl shrink-0">{item.emoji}</span>
+                      <div className="min-w-0">
+                        <div className="text-2xl font-black text-slate-900 break-words">
+                          {item.en} {item.moe1200 ? <span className="text-amber-600">*</span> : null}
+                        </div>
+                        <div className="text-lg font-bold text-slate-600">{item.zh}</div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 ml-2">
+                      <span className="inline-block text-xs font-extrabold px-3 py-1 rounded-full bg-slate-900 text-white">
+                        {item.unitBadge}
+                      </span>
+                      {item.page && (
+                        <div className="text-xs text-slate-500 font-bold mt-1">{item.page}</div>
+                      )}
+                    </div>
+                  </button>
+                ))}
               </div>
-            </button>
-          ))}
-        </div>
-      </section>
-    </div>
+            </div>
+          ),
+        }));
+
+  return (
+    <PagedBookFrame
+      pages={dictPages}
+      currentIndex={pageIdx}
+      onChangeIndex={setPageIdx}
+      finishAction={{ label: '🏠 回魔法遊戲館', onClick: onBackHome }}
+    />
   );
 };

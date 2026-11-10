@@ -41,12 +41,12 @@ const WEATHER_Y_ITEMS = [
 ];
 
 const TEEN_TY_PAIRS = [
-  { teenNum: 13, teenEn: 'thirteen', tyNum: 30, tyEn: 'thirty' },
-  { teenNum: 14, teenEn: 'fourteen', tyNum: 40, tyEn: 'forty（沒 u）' },
-  { teenNum: 15, teenEn: 'fifteen', tyNum: 50, tyEn: 'fifty' },
-  { teenNum: 16, teenEn: 'sixteen', tyNum: 60, tyEn: 'sixty' },
-  { teenNum: 17, teenEn: 'seventeen', tyNum: 70, tyEn: 'seventy' },
-  { teenNum: 18, teenEn: 'eighteen', tyNum: 80, tyEn: 'eighty' },
+  { teenNum: 13, teenEn: 'thirteen', tyNum: 30, tyEn: 'thirty', tyNote: '' },
+  { teenNum: 14, teenEn: 'fourteen', tyNum: 40, tyEn: 'forty', tyNote: '⚠️ 沒 u' },
+  { teenNum: 15, teenEn: 'fifteen', tyNum: 50, tyEn: 'fifty', tyNote: '' },
+  { teenNum: 16, teenEn: 'sixteen', tyNum: 60, tyEn: 'sixty', tyNote: '' },
+  { teenNum: 17, teenEn: 'seventeen', tyNum: 70, tyEn: 'seventy', tyNote: '' },
+  { teenNum: 18, teenEn: 'eighteen', tyNum: 80, tyEn: 'eighty', tyNote: '' },
 ];
 
 const SYLLABLE_WORDS = [
@@ -143,65 +143,83 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
           : 'border-sky-300 bg-sky-50/60';
     const tierBadge =
       item.tier === 'core'
-        ? { label: '⬛ 必背應用字', cls: 'bg-slate-900 text-white' }
+        ? { label: '⬛ 必背字', cls: 'bg-slate-900 text-white' }
         : item.tier === 'phonics'
-          ? { label: '🟩 自然發音字', cls: 'bg-emerald-600 text-white' }
-          : { label: '🟦 口語認識字', cls: 'bg-sky-600 text-white' };
+          ? { label: '🟩 發音字', cls: 'bg-emerald-600 text-white' }
+          : { label: '🟦 認識字', cls: 'bg-sky-600 text-white' };
+
+    const enSizeClass =
+      item.en.length >= 15
+        ? 'text-2xl sm:text-3xl'
+        : item.en.length >= 11
+          ? 'text-2xl sm:text-3xl lg:text-4xl'
+          : 'text-3xl sm:text-4xl';
 
     return (
       <div
         key={item.key}
         onClick={() => speakEnglish(item.en)}
-        className={`rounded-3xl border-3 p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer active:scale-[0.98] transition shadow-xs hover:shadow-md ${tierBorder}`}
+        className={`rounded-3xl border-3 p-4 sm:p-5 flex flex-col justify-between gap-2.5 cursor-pointer active:scale-[0.98] transition shadow-xs hover:shadow-md ${tierBorder}`}
       >
-        <div className="flex items-center gap-4 min-w-0">
-          <span className="text-5xl sm:text-6xl shrink-0">{item.emoji}</span>
-          <div className="min-w-0 space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-xs font-extrabold px-2.5 py-0.5 rounded-full ${tierBadge.cls}`}>
-                {tierBadge.label}
+        {/* Top Row: Emoji + Badges on Left, Audio Buttons Side-by-Side on Right */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-4xl sm:text-5xl leading-none shrink-0">{item.emoji}</span>
+            <span
+              className={`text-xs font-extrabold px-2.5 py-1 rounded-full whitespace-nowrap ${tierBadge.cls}`}
+            >
+              {tierBadge.label}
+            </span>
+            {item.page && (
+              <span className="text-xs font-bold text-slate-500 whitespace-nowrap">
+                {item.page}
               </span>
-              {item.page && (
-                <span className="text-xs font-bold text-slate-500">{item.page}</span>
-              )}
-              {(prog?.familiarity ?? 0) > 0 && (
-                <span className="inline-flex items-center gap-0.5 text-xs font-extrabold text-amber-600">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  {prog.familiarity}
-                </span>
-              )}
-            </div>
-            <div className="text-3xl sm:text-4xl font-black text-slate-900 tracking-wide break-words leading-tight">
-              {item.en}
-              {item.moe1200 && <span className="text-amber-600 ml-1 text-xl">*</span>}
-            </div>
-            <div className="text-xl font-extrabold text-slate-700">{item.zh}</div>
+            )}
+            {(prog?.familiarity ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-0.5 text-xs font-extrabold text-amber-600 whitespace-nowrap">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                {prog.familiarity}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                speakEnglish(item.en, 0.92);
+              }}
+              className="w-11 h-11 rounded-2xl bg-amber-300 hover:bg-amber-400 active:scale-90 text-slate-950 flex items-center justify-center shadow-xs cursor-pointer"
+              title="正常發音"
+            >
+              <Volume2 className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                speakEnglish(item.en, 0.56);
+              }}
+              className="w-11 h-11 rounded-2xl bg-teal-100 hover:bg-teal-200 active:scale-90 text-teal-900 flex items-center justify-center shadow-xs cursor-pointer"
+              title="慢速跟讀"
+            >
+              <Turtle className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              speakEnglish(item.en, 0.92);
-            }}
-            className="w-14 h-14 rounded-2xl bg-amber-300 hover:bg-amber-400 active:scale-90 text-slate-950 flex items-center justify-center shadow-xs cursor-pointer"
-            title="正常發音"
+        {/* Full-Width Single-Line English Word + Clean Chinese Meaning */}
+        <div className="pt-0.5">
+          <div
+            className={`${enSizeClass} font-black text-slate-900 tracking-wide whitespace-nowrap leading-tight`}
           >
-            <Volume2 className="w-7 h-7" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              speakEnglish(item.en, 0.56);
-            }}
-            className="w-14 h-14 rounded-2xl bg-teal-100 hover:bg-teal-200 active:scale-90 text-teal-900 flex items-center justify-center shadow-xs cursor-pointer"
-            title="慢速跟讀"
-          >
-            <Turtle className="w-7 h-7" />
-          </button>
+            {item.en}
+            {item.moe1200 && <span className="text-amber-600 ml-1 text-lg align-top">*</span>}
+          </div>
+          <div className="text-lg sm:text-xl font-extrabold text-slate-700 mt-1 truncate">
+            {item.zh}
+          </div>
         </div>
       </div>
     );
@@ -227,17 +245,21 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
               <span>{unit.pages}</span>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-7xl sm:text-8xl">{unit.heroEmoji}</span>
-              <div>
-                <h2 className="text-4xl sm:text-5xl font-black leading-tight">
+              <span className="text-6xl sm:text-8xl shrink-0">{unit.heroEmoji}</span>
+              <div className="min-w-0">
+                <h2
+                  className={`${
+                    unit.titleEn.length > 22 ? 'text-2xl sm:text-4xl' : 'text-3xl sm:text-5xl'
+                  } font-black leading-tight`}
+                >
                   {unit.titleEn}
                 </h2>
-                <p className="text-2xl sm:text-3xl font-extrabold text-white/95 mt-1">
+                <p className="text-xl sm:text-2xl font-extrabold text-white/95 mt-1">
                   {unit.titleZh}
                 </p>
               </div>
             </div>
-            <p className="text-xl font-bold text-white/90 max-w-3xl leading-relaxed pt-2">
+            <p className="text-lg sm:text-xl font-bold text-white/90 max-w-3xl leading-relaxed pt-1">
               {unit.summary}
             </p>
           </div>
@@ -246,28 +268,28 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
             <div className="text-base font-extrabold text-white/90">
               👆 點擊右下角「下一頁 ▶」一頁一頁翻書學習，或直接進入互動練習：
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <button
                 onClick={() => onStartPractice('flashcards')}
-                className="py-4 px-4 rounded-2xl bg-white text-slate-900 font-extrabold text-lg sm:text-xl shadow-md active:scale-95 cursor-pointer"
+                className="py-3.5 px-4 rounded-2xl bg-white text-slate-900 font-extrabold text-lg whitespace-nowrap shadow-md active:scale-95 cursor-pointer"
               >
                 🃏 3D 閃卡
               </button>
               <button
                 onClick={() => onStartPractice('quiz')}
-                className="py-4 px-4 rounded-2xl bg-amber-300 text-slate-950 font-extrabold text-lg sm:text-xl shadow-md active:scale-95 cursor-pointer"
+                className="py-3.5 px-4 rounded-2xl bg-amber-300 text-slate-950 font-extrabold text-lg whitespace-nowrap shadow-md active:scale-95 cursor-pointer"
               >
                 🎧 聽音測驗
               </button>
               <button
                 onClick={() => onStartPractice('spelling')}
-                className="py-4 px-4 rounded-2xl bg-white/20 border-2 border-white/50 text-white font-extrabold text-lg sm:text-xl active:scale-95 cursor-pointer"
+                className="py-3.5 px-4 rounded-2xl bg-white/20 border-2 border-white/50 text-white font-extrabold text-lg whitespace-nowrap active:scale-95 cursor-pointer"
               >
                 🔤 方塊拼字
               </button>
               <button
                 onClick={() => onStartPractice('scramble')}
-                className="py-4 px-4 rounded-2xl bg-white/20 border-2 border-white/50 text-white font-extrabold text-lg sm:text-xl active:scale-95 cursor-pointer"
+                className="py-3.5 px-4 rounded-2xl bg-white/20 border-2 border-white/50 text-white font-extrabold text-lg whitespace-nowrap active:scale-95 cursor-pointer"
               >
                 🚂 句子火車
               </button>
@@ -377,26 +399,26 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
                   className="rounded-3xl border-3 border-sky-200 bg-sky-50/40 p-6 space-y-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="px-4 py-1 rounded-full bg-sky-600 text-white text-sm font-extrabold">
+                    <span className="px-4 py-1 rounded-full bg-sky-600 text-white text-sm font-extrabold whitespace-nowrap">
                       {s.tag}
                     </span>
-                    <div className="flex gap-2.5">
+                    <div className="flex gap-2">
                       <button
                         onClick={() =>
                           speakEnglish(s.replyEn ? `${s.en} ${s.replyEn}` : s.en, 0.9)
                         }
-                        className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-lg font-extrabold cursor-pointer shadow-xs"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-base sm:text-lg font-extrabold whitespace-nowrap cursor-pointer shadow-xs"
                       >
-                        <Volume2 className="w-6 h-6" />
+                        <Volume2 className="w-5 h-5 shrink-0" />
                         正常發音
                       </button>
                       <button
                         onClick={() =>
                           speakEnglish(s.replyEn ? `${s.en} ${s.replyEn}` : s.en, 0.56)
                         }
-                        className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-lg font-extrabold cursor-pointer shadow-xs"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-base sm:text-lg font-extrabold whitespace-nowrap cursor-pointer shadow-xs"
                       >
-                        <Turtle className="w-6 h-6" />
+                        <Turtle className="w-5 h-5 shrink-0" />
                         慢速跟讀
                       </button>
                     </div>
@@ -406,10 +428,14 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
                     onClick={() => speakEnglish(s.en)}
                     className="cursor-pointer active:opacity-75 space-y-1"
                   >
-                    <div className="text-3xl sm:text-4xl font-black text-slate-900 leading-snug">
+                    <div
+                      className={`${
+                        s.en.length > 34 ? 'text-2xl sm:text-3xl' : 'text-2xl sm:text-4xl'
+                      } font-black text-slate-900 leading-snug`}
+                    >
                       {s.en}
                     </div>
-                    <div className="text-xl font-bold text-slate-600">{s.zh}</div>
+                    <div className="text-lg sm:text-xl font-bold text-slate-600">{s.zh}</div>
                   </div>
 
                   {s.replyEn && (
@@ -445,36 +471,48 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
               ? `Phonics 自然發音（${idx + 1} / ${phChunks.length}）`
               : 'Phonics 自然發音對照',
           render: () => (
-            <div className="space-y-5">
+            <div className="space-y-4">
               <h3 className="text-2xl sm:text-3xl font-extrabold text-emerald-950">
                 🔤 自然發音字群點讀
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-4">
                 {grpPair.map((grp) => (
                   <div
                     key={grp.pattern}
-                    className="rounded-3xl border-3 border-emerald-200 bg-emerald-50/50 p-6 space-y-4"
+                    className="rounded-3xl border-3 border-emerald-200 bg-emerald-50/50 p-4 sm:p-5 space-y-3"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl sm:text-3xl font-black text-emerald-900">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xl sm:text-2xl font-black text-emerald-900 whitespace-nowrap">
                         {grp.pattern}
                       </span>
-                      <span className="px-3.5 py-1 rounded-full bg-emerald-600 text-white text-sm font-extrabold">
+                      <span className="px-3.5 py-1 rounded-full bg-emerald-600 text-white text-sm font-extrabold whitespace-nowrap">
                         {grp.label}
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div
+                      className={`grid gap-3 ${
+                        grp.words.length >= 4
+                          ? 'grid-cols-2 sm:grid-cols-4'
+                          : 'grid-cols-1 sm:grid-cols-3'
+                      }`}
+                    >
                       {grp.words.map((w) => (
                         <button
                           key={w.en}
                           onClick={() => speakEnglish(w.en)}
-                          className="p-4 rounded-2xl bg-white border-2 border-emerald-200 hover:border-emerald-400 active:scale-95 text-center cursor-pointer shadow-xs"
+                          className="p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-emerald-200 hover:border-emerald-400 active:scale-95 text-center cursor-pointer shadow-xs"
                         >
-                          <div className="text-4xl mb-1">{w.emoji}</div>
-                          <div className="text-2xl sm:text-3xl font-black text-slate-900">
+                          <div className="text-3xl sm:text-4xl mb-1">{w.emoji}</div>
+                          <div
+                            className={`${
+                              w.en.length >= 9 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
+                            } font-black text-slate-900 whitespace-nowrap`}
+                          >
                             {w.en}
                           </div>
-                          <div className="text-base font-bold text-slate-600">{w.zh}</div>
+                          <div className="text-base font-bold text-slate-600 whitespace-nowrap">
+                            {w.zh}
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -704,22 +742,35 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
               {TEEN_TY_PAIRS.map((pair) => (
                 <div
                   key={pair.teenNum}
-                  className="bg-amber-50/50 rounded-3xl p-4 border-2 border-amber-200 flex items-center justify-between gap-3"
+                  className="bg-amber-50/50 rounded-3xl p-3.5 sm:p-4 border-2 border-amber-200 flex items-center justify-between gap-2.5"
                 >
                   <button
                     onClick={() => speakEnglish(pair.teenEn)}
-                    className="flex-1 p-3.5 rounded-2xl bg-violet-100 hover:bg-violet-200 active:scale-95 text-center cursor-pointer"
+                    className="flex-1 py-3 px-2 rounded-2xl bg-violet-100 hover:bg-violet-200 active:scale-95 text-center cursor-pointer min-w-0"
                   >
-                    <div className="text-3xl font-black text-violet-950">{pair.teenNum}</div>
-                    <div className="text-xl font-extrabold text-violet-800">{pair.teenEn}</div>
+                    <div className="text-2xl sm:text-3xl font-black text-violet-950 whitespace-nowrap">
+                      {pair.teenNum}
+                    </div>
+                    <div className="text-lg sm:text-xl font-extrabold text-violet-800 whitespace-nowrap">
+                      {pair.teenEn}
+                    </div>
                   </button>
-                  <span className="font-black text-slate-400">VS</span>
+                  <span className="font-black text-xs sm:text-sm text-slate-400 shrink-0">VS</span>
                   <button
-                    onClick={() => speakEnglish(pair.tyEn.replace(/（.*）/, ''))}
-                    className="flex-1 p-3.5 rounded-2xl bg-fuchsia-100 hover:bg-fuchsia-200 active:scale-95 text-center cursor-pointer"
+                    onClick={() => speakEnglish(pair.tyEn)}
+                    className="flex-1 py-3 px-2 rounded-2xl bg-fuchsia-100 hover:bg-fuchsia-200 active:scale-95 text-center cursor-pointer min-w-0"
                   >
-                    <div className="text-3xl font-black text-fuchsia-950">{pair.tyNum}</div>
-                    <div className="text-xl font-extrabold text-fuchsia-800">{pair.tyEn}</div>
+                    <div className="text-2xl sm:text-3xl font-black text-fuchsia-950 whitespace-nowrap">
+                      {pair.tyNum}
+                      {pair.tyNote && (
+                        <span className="ml-1 text-xs font-extrabold text-rose-600 align-middle">
+                          {pair.tyNote}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-lg sm:text-xl font-extrabold text-fuchsia-800 whitespace-nowrap">
+                      {pair.tyEn}
+                    </div>
                   </button>
                 </div>
               ))}
@@ -871,22 +922,24 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
                 return (
                   <div
                     key={item.word}
-                    className="p-4 rounded-3xl bg-slate-50 border-2 border-slate-200 flex flex-col justify-between gap-3"
+                    className="p-3.5 sm:p-4 rounded-3xl bg-slate-50 border-2 border-slate-200 flex flex-col justify-between gap-2.5"
                   >
                     <div
                       onClick={() => speakEnglish(item.word)}
-                      className="flex items-center justify-between cursor-pointer"
+                      className="cursor-pointer space-y-1"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-3xl">{item.emoji}</span>
-                        <div>
-                          <div className="text-2xl font-black text-slate-900">
-                            {isCorrect ? item.parts : item.word}
-                          </div>
-                          <div className="text-sm font-bold text-slate-500">{item.zh}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-3xl leading-none">{item.emoji}</span>
+                          <span className="text-sm font-bold text-slate-600 whitespace-nowrap">
+                            {item.zh}
+                          </span>
                         </div>
+                        <Volume2 className="w-5 h-5 text-slate-400 shrink-0" />
                       </div>
-                      <Volume2 className="w-5 h-5 text-slate-400" />
+                      <div className="text-xl sm:text-2xl font-black text-slate-900 whitespace-nowrap">
+                        {isCorrect ? item.parts : item.word}
+                      </div>
                     </div>
                     <div className="grid grid-cols-3 gap-1.5">
                       {[1, 2, 3].map((n) => (
@@ -900,7 +953,7 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
                               speakEnglish(item.word);
                             }
                           }}
-                          className={`py-2.5 rounded-xl text-base font-extrabold cursor-pointer active:scale-90 ${
+                          className={`py-2 px-1 rounded-xl text-sm sm:text-base font-extrabold whitespace-nowrap cursor-pointer active:scale-90 ${
                             picked === n
                               ? n === item.count
                                 ? 'bg-emerald-500 text-white'
@@ -908,7 +961,7 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
                               : 'bg-white border border-slate-200 text-slate-800'
                           }`}
                         >
-                          {n}音節
+                          {n} 音節
                         </button>
                       ))}
                     </div>
@@ -1033,13 +1086,13 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
                   <button
                     key={w.en}
                     onClick={() => speakEnglish(w.en)}
-                    className={`p-3 rounded-2xl border-2 text-center cursor-pointer active:scale-95 ${
+                    className={`py-2.5 px-2 rounded-2xl border-2 text-center cursor-pointer active:scale-95 ${
                       match
                         ? 'bg-indigo-50 border-indigo-300 text-slate-900'
                         : 'bg-slate-50 border-slate-100 text-slate-300 opacity-40'
                     }`}
                   >
-                    <div className="text-xl sm:text-2xl font-black">{w.en}</div>
+                    <div className="text-lg sm:text-2xl font-black whitespace-nowrap">{w.en}</div>
                     <div className="text-xs sm:text-sm font-bold text-slate-600 truncate">
                       {w.zh}
                     </div>
@@ -1102,7 +1155,7 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
               <Gamepad2 className="w-7 h-7 text-amber-500" />
               準備好了嗎？選擇一個模式開始闖關集星！
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
                 { tab: 'flashcards' as const, emoji: '🃏', title: '3D 點讀閃卡', bg: 'from-amber-400 to-orange-500' },
                 { tab: 'quiz' as const, emoji: '🎧', title: '聽力選擇測驗', bg: 'from-sky-500 to-blue-600' },
@@ -1112,10 +1165,10 @@ export const UnitExplorer: React.FC<UnitExplorerProps> = ({
                 <button
                   key={btn.tab}
                   onClick={() => onStartPractice(btn.tab)}
-                  className={`p-6 rounded-3xl bg-gradient-to-br ${btn.bg} text-white text-center shadow-lg active:scale-95 cursor-pointer space-y-2`}
+                  className={`p-5 rounded-3xl bg-gradient-to-br ${btn.bg} text-white text-center shadow-lg active:scale-95 cursor-pointer space-y-2`}
                 >
-                  <div className="text-5xl">{btn.emoji}</div>
-                  <div className="text-xl font-black">{btn.title}</div>
+                  <div className="text-4xl sm:text-5xl">{btn.emoji}</div>
+                  <div className="text-lg sm:text-xl font-black whitespace-nowrap">{btn.title}</div>
                 </button>
               ))}
             </div>

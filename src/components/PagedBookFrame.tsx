@@ -119,15 +119,15 @@ export const PagedBookFrame: React.FC<PagedBookFrameProps> = ({
         <button
           onClick={() => goTo(safeIdx - 1)}
           disabled={safeIdx === 0}
-          className="min-w-34 sm:min-w-42 py-3.5 px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 disabled:opacity-35 active:scale-95 text-slate-800 font-extrabold text-lg sm:text-xl flex items-center justify-center gap-2 transition cursor-pointer disabled:cursor-default"
+          className="min-w-32 sm:min-w-40 py-3 px-4 sm:px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 disabled:opacity-35 active:scale-95 text-slate-800 font-extrabold text-base sm:text-xl whitespace-nowrap flex items-center justify-center gap-1.5 transition cursor-pointer disabled:cursor-default"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-6 h-6 shrink-0" />
           上一頁
         </button>
 
         {/* Page Dots & Counter */}
         <div className="flex flex-col items-center gap-1.5">
-          <div className="text-base sm:text-lg font-black text-slate-700">
+          <div className="text-base sm:text-lg font-black text-slate-700 whitespace-nowrap">
             第 <span className="text-amber-600 text-xl">{safeIdx + 1}</span> / {pages.length} 頁
           </div>
           <div className="hidden sm:flex items-center gap-1.5">
@@ -149,20 +149,20 @@ export const PagedBookFrame: React.FC<PagedBookFrameProps> = ({
         {safeIdx < pages.length - 1 ? (
           <button
             onClick={() => goTo(safeIdx + 1)}
-            className="min-w-34 sm:min-w-42 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-extrabold text-lg sm:text-xl flex items-center justify-center gap-2 shadow-md shadow-amber-500/25 transition cursor-pointer"
+            className="min-w-32 sm:min-w-40 py-3 px-4 sm:px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-extrabold text-base sm:text-xl whitespace-nowrap flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 transition cursor-pointer"
           >
             下一頁
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-6 h-6 shrink-0" />
           </button>
         ) : finishAction ? (
           <button
             onClick={finishAction.onClick}
-            className="min-w-34 sm:min-w-42 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-95 text-white font-extrabold text-lg sm:text-xl flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+            className="min-w-32 sm:min-w-40 py-3 px-4 sm:px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-95 text-white font-extrabold text-base sm:text-lg whitespace-nowrap flex items-center justify-center gap-1.5 shadow-md transition cursor-pointer"
           >
             {finishAction.label}
           </button>
         ) : (
-          <div className="min-w-34 sm:min-w-42 text-center text-sm font-extrabold text-emerald-600">
+          <div className="min-w-32 sm:min-w-40 text-center text-sm font-extrabold text-emerald-600 whitespace-nowrap">
             🎉 已到最後一頁
           </div>
         )}

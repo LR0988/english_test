@@ -47,7 +47,7 @@ export const CultureAndExtras: React.FC<CultureAndExtrasProps> = ({
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
               {EMERGENCY_SCENARIOS.map((sc) => {
                 const active = sc.id === selectedDisasterId;
                 return (
@@ -58,16 +58,18 @@ export const CultureAndExtras: React.FC<CultureAndExtrasProps> = ({
                       speakEnglish(sc.wordEn);
                       playSuccessChime();
                     }}
-                    className={`p-5 rounded-3xl border-3 text-center transition active:scale-95 cursor-pointer ${
+                    className={`p-4 sm:p-5 rounded-3xl border-3 text-center transition active:scale-95 cursor-pointer ${
                       active
                         ? 'bg-rose-600 text-white border-rose-700 shadow-lg'
                         : 'bg-slate-50 hover:bg-rose-50 border-slate-200 text-slate-900'
                     }`}
                   >
-                    <div className="text-5xl mb-2">{sc.emoji}</div>
-                    <div className="font-black text-xl">{sc.wordEn}</div>
+                    <div className="text-4xl sm:text-5xl mb-2">{sc.emoji}</div>
+                    <div className="font-black text-xl sm:text-2xl whitespace-nowrap">
+                      {sc.wordEn}
+                    </div>
                     <div
-                      className={`text-base font-bold mt-0.5 ${
+                      className={`text-base font-bold mt-0.5 whitespace-nowrap ${
                         active ? 'text-rose-100' : 'text-slate-600'
                       }`}
                     >
@@ -180,15 +182,24 @@ export const CultureAndExtras: React.FC<CultureAndExtrasProps> = ({
                         {c.tempNum}°C
                       </span>
                     </div>
-                    <div className="mt-3 text-2xl sm:text-3xl font-black">
-                      {c.cityEn}（{c.cityZh}）
+                    <div className="mt-3 flex items-baseline gap-2 flex-wrap">
+                      <span className="text-2xl sm:text-3xl font-black whitespace-nowrap">
+                        {c.cityEn}
+                      </span>
+                      <span
+                        className={`text-base sm:text-lg font-extrabold whitespace-nowrap ${
+                          selected ? 'text-amber-200' : 'text-slate-500'
+                        }`}
+                      >
+                        {c.cityZh}
+                      </span>
                     </div>
                     <div
-                      className={`text-base sm:text-lg font-bold mt-1 ${
+                      className={`text-sm sm:text-base font-bold mt-1 whitespace-nowrap truncate ${
                         selected ? 'text-sky-100' : 'text-slate-600'
                       }`}
                     >
-                      {c.weatherEn}・{c.tempWords}
+                      {c.weatherEn} · {c.tempWords}
                     </div>
                   </button>
                 );
@@ -245,11 +256,19 @@ export const CultureAndExtras: React.FC<CultureAndExtrasProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-5">
-          <span className="text-7xl sm:text-8xl">{clk.emoji}</span>
-          <div>
-            <h2 className="text-3xl sm:text-5xl font-black text-slate-900">{clk.nameEn}</h2>
-            <div className="text-2xl font-extrabold text-violet-700 mt-1">{clk.nameZh}</div>
+        <div className="flex items-center gap-4 sm:gap-5">
+          <span className="text-6xl sm:text-8xl shrink-0">{clk.emoji}</span>
+          <div className="min-w-0">
+            <h2
+              className={`${
+                clk.nameEn.length > 18 ? 'text-2xl sm:text-4xl' : 'text-3xl sm:text-5xl'
+              } font-black text-slate-900 leading-tight`}
+            >
+              {clk.nameEn}
+            </h2>
+            <div className="text-xl sm:text-2xl font-extrabold text-violet-700 mt-1">
+              {clk.nameZh}
+            </div>
           </div>
         </div>
 

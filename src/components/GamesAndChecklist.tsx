@@ -267,19 +267,19 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
               </div>
             </div>
 
-            <div className="flex justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-3.5">
               <button
                 onClick={() => speakEnglish(pair.shortWord, 0.85)}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-100 text-slate-900 font-extrabold text-lg cursor-pointer active:scale-95"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-100 text-slate-900 font-extrabold text-lg whitespace-nowrap cursor-pointer active:scale-95"
               >
-                <Volume2 className="w-5 h-5" />
+                <Volume2 className="w-5 h-5 shrink-0" />
                 短母音：{pair.shortWord}
               </button>
               <button
                 onClick={() => speakEnglish(pair.longWord, 0.85)}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-amber-500 text-white font-extrabold text-lg cursor-pointer active:scale-95 shadow-sm"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-amber-500 text-white font-extrabold text-lg whitespace-nowrap cursor-pointer active:scale-95 shadow-sm"
               >
-                <Turtle className="w-5 h-5" />
+                <Turtle className="w-5 h-5 shrink-0" />
                 長母音：{pair.longWord}
               </button>
             </div>
@@ -316,22 +316,22 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
               </div>
 
               {pendingTileIdx === null && !boardWon ? (
-                <div className="flex gap-3 shrink-0">
+                <div className="flex gap-2.5 shrink-0">
                   <button
                     onClick={() => playRps('scissors')}
-                    className="px-6 py-4 rounded-2xl bg-amber-400 text-slate-950 font-extrabold text-xl shadow-sm active:scale-95 cursor-pointer"
+                    className="px-5 py-3.5 rounded-2xl bg-amber-400 text-slate-950 font-extrabold text-lg sm:text-xl whitespace-nowrap shadow-sm active:scale-95 cursor-pointer"
                   >
                     ✌️ 剪刀
                   </button>
                   <button
                     onClick={() => playRps('rock')}
-                    className="px-6 py-4 rounded-2xl bg-sky-500 text-white font-extrabold text-xl shadow-sm active:scale-95 cursor-pointer"
+                    className="px-5 py-3.5 rounded-2xl bg-sky-500 text-white font-extrabold text-lg sm:text-xl whitespace-nowrap shadow-sm active:scale-95 cursor-pointer"
                   >
                     ✊ 石頭
                   </button>
                   <button
                     onClick={() => playRps('paper')}
-                    className="px-6 py-4 rounded-2xl bg-emerald-500 text-white font-extrabold text-xl shadow-sm active:scale-95 cursor-pointer"
+                    className="px-5 py-3.5 rounded-2xl bg-emerald-500 text-white font-extrabold text-lg sm:text-xl whitespace-nowrap shadow-sm active:scale-95 cursor-pointer"
                   >
                     ✋ 布
                   </button>
@@ -398,7 +398,9 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
                     >
                       <span className="text-xs font-black">#{t.pos}</span>
                       <div className="text-4xl my-1">{isHere ? '🦁' : passed ? '⭐' : '🐚'}</div>
-                      <span className="text-base sm:text-lg font-extrabold">{t.label}</span>
+                      <span className="text-sm sm:text-lg font-extrabold whitespace-nowrap">
+                        {t.label}
+                      </span>
                     </div>
                   );
                 })}
@@ -478,14 +480,16 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
                 <div
                   key={t.key}
                   onClick={() => done && speakEnglish(t.word)}
-                  className={`p-4 rounded-2xl border-2 text-lg font-extrabold flex items-center justify-between ${
+                  className={`p-4 rounded-2xl border-2 text-base sm:text-lg font-extrabold flex items-center justify-between gap-2 ${
                     done
                       ? 'bg-emerald-50 border-emerald-400 text-emerald-950 cursor-pointer'
                       : 'bg-slate-50 border-slate-200 text-slate-600'
                   }`}
                 >
-                  <span>🔍 {t.hintZh}</span>
-                  <span>{done ? `✅ ${t.word}` : '❓ 未尋獲'}</span>
+                  <span className="truncate">🔍 {t.hintZh}</span>
+                  <span className="shrink-0 whitespace-nowrap">
+                    {done ? `✅ ${t.word}` : '❓ 未尋獲'}
+                  </span>
                 </div>
               );
             })}
@@ -640,33 +644,45 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
                 </div>
               </div>
 
-              {/* 6 Giant Cards Grid */}
+              {/* 6 Giant Single-Line Dictionary Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {chunk.map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => speakEnglish(item.en)}
-                    className="p-4 sm:p-5 rounded-3xl border-2 border-slate-200 hover:border-sky-400 bg-slate-50/50 active:scale-[0.98] flex items-center justify-between text-left cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <span className="text-4xl shrink-0">{item.emoji}</span>
-                      <div className="min-w-0">
-                        <div className="text-2xl font-black text-slate-900 break-words">
-                          {item.en} {item.moe1200 ? <span className="text-amber-600">*</span> : null}
+                {chunk.map((item) => {
+                  const enSize =
+                    item.en.length >= 15
+                      ? 'text-xl sm:text-2xl'
+                      : 'text-2xl sm:text-3xl';
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => speakEnglish(item.en)}
+                      className="p-4 rounded-3xl border-2 border-slate-200 hover:border-sky-400 bg-slate-50/50 active:scale-[0.98] flex flex-col justify-between gap-1.5 text-left cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between gap-2 w-full">
+                        <div className="flex items-center gap-2">
+                          <span className="text-3xl leading-none shrink-0">{item.emoji}</span>
+                          <span className="inline-block text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-900 text-white whitespace-nowrap">
+                            {item.unitBadge}
+                          </span>
+                          {item.page && (
+                            <span className="text-xs text-slate-500 font-bold whitespace-nowrap">
+                              {item.page}
+                            </span>
+                          )}
                         </div>
-                        <div className="text-lg font-bold text-slate-600">{item.zh}</div>
+                        <Volume2 className="w-5 h-5 text-sky-600 shrink-0" />
                       </div>
-                    </div>
-                    <div className="text-right shrink-0 ml-2">
-                      <span className="inline-block text-xs font-extrabold px-3 py-1 rounded-full bg-slate-900 text-white">
-                        {item.unitBadge}
-                      </span>
-                      {item.page && (
-                        <div className="text-xs text-slate-500 font-bold mt-1">{item.page}</div>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                      <div className="w-full">
+                        <div className={`${enSize} font-black text-slate-900 whitespace-nowrap`}>
+                          {item.en}{' '}
+                          {item.moe1200 ? <span className="text-amber-600 text-base align-top">*</span> : null}
+                        </div>
+                        <div className="text-base sm:text-lg font-bold text-slate-600 truncate">
+                          {item.zh}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ),

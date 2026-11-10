@@ -54,19 +54,19 @@ export const HomeLauncher: React.FC<HomeLauncherProps> = ({
           >
             {u.heroEmoji}
           </div>
-          <span className="px-3.5 py-1 rounded-full bg-amber-100 text-amber-950 text-xs sm:text-sm font-black">
+          <span className="px-3.5 py-1 rounded-full bg-amber-100 text-amber-950 text-xs sm:text-sm font-black whitespace-nowrap">
             {u.pages.split('（')[0]}
           </span>
         </div>
 
         <div className="space-y-1">
-          <div className="text-sm font-black text-sky-700 uppercase tracking-wide">
+          <div className="text-sm font-black text-sky-700 uppercase tracking-wide whitespace-nowrap">
             {u.badge}
           </div>
-          <h3 className="text-2xl font-extrabold text-slate-900 leading-tight">
+          <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-snug">
             {u.titleEn}
           </h3>
-          <p className="text-base sm:text-lg font-bold text-slate-600 line-clamp-1">
+          <p className="text-base font-bold text-slate-600 line-clamp-1">
             {u.titleZh}
           </p>
         </div>
@@ -74,14 +74,14 @@ export const HomeLauncher: React.FC<HomeLauncherProps> = ({
         <div className="space-y-2 pt-1">
           {totalWords > 0 && (
             <div>
-              <div className="flex items-center justify-between text-xs sm:text-sm font-extrabold text-slate-500 mb-1">
-                <span className="inline-flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <div className="flex items-center justify-between gap-2 text-xs sm:text-sm font-extrabold text-slate-500 mb-1">
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400 shrink-0" />
                   熟記 {masteredInUnit} / {totalWords} 字
                 </span>
                 {u.checklistItems && (
-                  <span className="inline-flex items-center gap-1 text-emerald-700">
-                    <CheckCircle2 className="w-4 h-4" />
+                  <span className="inline-flex items-center gap-1 text-emerald-700 whitespace-nowrap">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
                     檢核 {doneChecks}/{u.checklistItems.length}
                   </span>
                 )}
@@ -125,7 +125,7 @@ export const HomeLauncher: React.FC<HomeLauncherProps> = ({
               >
                 <span className="text-3xl shrink-0">{t.emoji}</span>
                 <div className="min-w-0">
-                  <div className="font-extrabold text-base sm:text-lg leading-tight">
+                  <div className="font-extrabold text-base sm:text-lg leading-tight whitespace-nowrap">
                     {t.label}
                   </div>
                   <div
@@ -149,7 +149,7 @@ export const HomeLauncher: React.FC<HomeLauncherProps> = ({
         )}
 
         {shelfTab === 'starter' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-page-next">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-page-next">
             {UNITS_DATA.filter((u) => u.section === 'starter').map(renderUnitCard)}
           </div>
         )}

@@ -323,30 +323,46 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               }`}
             >
               {/* Front */}
-              <div className="absolute inset-0 backface-hidden rounded-[2rem] bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 border-4 border-amber-300 flex flex-col items-center justify-center p-8 text-center shadow-inner">
-                <div className="text-8xl mb-5">{currentCard.emoji}</div>
-                <div className="text-5xl sm:text-6xl font-black text-slate-900 tracking-wide">
+              <div className="absolute inset-0 backface-hidden rounded-[2rem] bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 border-4 border-amber-300 flex flex-col items-center justify-center p-6 sm:p-8 text-center shadow-inner overflow-hidden">
+                <div className="text-7xl sm:text-8xl mb-4">{currentCard.emoji}</div>
+                <div
+                  className={`${
+                    currentCard.en.length >= 15
+                      ? 'text-3xl sm:text-5xl'
+                      : currentCard.en.length >= 11
+                        ? 'text-4xl sm:text-5xl'
+                        : 'text-5xl sm:text-6xl'
+                  } font-black text-slate-900 tracking-wide whitespace-nowrap`}
+                >
                   {currentCard.en}
                 </div>
                 {currentCard.moe1200 && (
-                  <span className="mt-3 text-sm font-extrabold text-amber-800 bg-amber-200/80 px-3.5 py-1 rounded-full">
+                  <span className="mt-3 text-sm font-extrabold text-amber-800 bg-amber-200/80 px-3.5 py-1 rounded-full whitespace-nowrap">
                     ★ 教育部基本 1,200 字詞
                   </span>
                 )}
-                <p className="text-base text-slate-500 mt-6 font-extrabold">
+                <p className="text-sm sm:text-base text-slate-500 mt-5 font-extrabold whitespace-nowrap">
                   👆 點一下卡片翻面看中文解釋並聽發音
                 </p>
               </div>
 
               {/* Back */}
-              <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-[2rem] bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-4 border-sky-300 flex flex-col items-center justify-center p-8 text-center shadow-lg">
-                <div className="text-7xl mb-4">{currentCard.emoji}</div>
-                <div className="text-4xl sm:text-5xl font-extrabold mb-3">{currentCard.zh}</div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-sky-100">
+              <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-[2rem] bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-4 border-sky-300 flex flex-col items-center justify-center p-6 sm:p-8 text-center shadow-lg overflow-hidden">
+                <div className="text-6xl sm:text-7xl mb-3">{currentCard.emoji}</div>
+                <div
+                  className={`${
+                    currentCard.zh.length >= 10
+                      ? 'text-2xl sm:text-4xl'
+                      : 'text-3xl sm:text-5xl'
+                  } font-extrabold mb-2 whitespace-nowrap`}
+                >
+                  {currentCard.zh}
+                </div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-sky-100 whitespace-nowrap">
                   {currentCard.en}
                 </div>
                 {currentCard.category && (
-                  <span className="mt-4 text-sm bg-white/20 px-4 py-1.5 rounded-full font-extrabold">
+                  <span className="mt-3 text-sm bg-white/20 px-4 py-1.5 rounded-full font-extrabold whitespace-nowrap">
                     {currentCard.category} {currentCard.page ? `｜${currentCard.page}` : ''}
                   </span>
                 )}
@@ -504,19 +520,25 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                     }
                   }
 
+                  const optLabel = quizQuestions[qIdx].isListening ? opt.zh : opt.en;
+                  const optSize =
+                    optLabel.length >= 14
+                      ? 'text-xl sm:text-2xl'
+                      : 'text-2xl sm:text-3xl';
+
                   return (
                     <button
                       key={opt.key}
                       onClick={() => handleQuizPick(opt)}
-                      className={`p-6 rounded-3xl border-3 font-extrabold text-left flex items-center gap-4 transition active:scale-[0.98] cursor-pointer ${btnStyle}`}
+                      className={`p-4 sm:p-5 rounded-3xl border-3 font-extrabold text-left flex items-center gap-3.5 transition active:scale-[0.98] cursor-pointer overflow-hidden ${btnStyle}`}
                     >
-                      <span className="text-5xl shrink-0">{opt.emoji}</span>
-                      <div>
-                        <div className="text-2xl sm:text-3xl leading-snug">
-                          {quizQuestions[qIdx].isListening ? opt.zh : opt.en}
+                      <span className="text-4xl sm:text-5xl shrink-0">{opt.emoji}</span>
+                      <div className="min-w-0">
+                        <div className={`${optSize} leading-snug whitespace-nowrap truncate`}>
+                          {optLabel}
                         </div>
                         {selectedOpt && (
-                          <div className="text-base font-bold text-slate-600 mt-1">
+                          <div className="text-sm sm:text-base font-bold text-slate-600 mt-1 truncate">
                             {opt.en} — {opt.zh}
                           </div>
                         )}
@@ -817,7 +839,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                       onClick={() =>
                         setPickedWordIndices((prev) => prev.filter((_, idx) => idx !== pos))
                       }
-                      className="px-5 py-3.5 rounded-2xl bg-purple-600 text-white font-extrabold text-2xl shadow-md active:scale-95 cursor-pointer"
+                      className="px-5 py-3.5 rounded-2xl bg-purple-600 text-white font-extrabold text-xl sm:text-2xl whitespace-nowrap shadow-md active:scale-95 cursor-pointer"
                     >
                       {wordTokens[wIdx]}
                     </button>
@@ -826,7 +848,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               </div>
 
               {/* Scrambled Word Bank */}
-              <div className="flex flex-wrap justify-center gap-3.5">
+              <div className="flex flex-wrap justify-center gap-3">
                 {wordTokens.map((tok, idx) => {
                   const used = pickedWordIndices.includes(idx);
                   return (
@@ -837,7 +859,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                         speakEnglish(tok);
                         setPickedWordIndices((prev) => [...prev, idx]);
                       }}
-                      className={`px-6 py-4 rounded-2xl font-extrabold text-2xl border-3 transition active:scale-95 cursor-pointer ${
+                      className={`px-5 py-3.5 rounded-2xl font-extrabold text-xl sm:text-2xl whitespace-nowrap border-3 transition active:scale-95 cursor-pointer ${
                         used
                           ? 'bg-slate-100 text-slate-300 border-slate-200'
                           : 'bg-white hover:bg-purple-50 text-slate-900 border-purple-300 shadow-md'

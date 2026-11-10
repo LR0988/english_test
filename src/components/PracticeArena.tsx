@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Sparkles,
   Trophy,
+  Delete,
 } from 'lucide-react';
 import { VocabItem, SentenceItem } from '../data/curriculum';
 import { speakEnglish, playSuccessChime, playGentleRetry } from '../lib/speech';
@@ -125,7 +126,6 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
     return shuffleArray(currentSentence.en.split(' '));
   }, [currentSentence]);
 
-  // Reset sub-states on tab switch
   const switchTab = (next: PracticeTab) => {
     setTab(next);
     setFlipped(false);
@@ -150,7 +150,6 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
     }
   };
 
-  // Quiz Answer Handler
   const handleQuizPick = (opt: VocabItem) => {
     if (selectedOpt) return;
     setSelectedOpt(opt.key);
@@ -178,7 +177,6 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
     }
   };
 
-  // Spelling Check Handler
   const currentBuiltSpelling =
     inputMode === 'tiles'
       ? pickedTileIndices.map((i) => letterTiles[i]).join('')
@@ -214,7 +212,6 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
     }
   };
 
-  // Sentence Scramble Check
   const builtSentence = pickedWordIndices.map((i) => wordTokens[i]).join(' ');
 
   const checkScramble = () => {
@@ -248,37 +245,37 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white rounded-3xl p-4 shadow-sm border-2 border-amber-200">
-        <div className="flex items-center gap-3">
+      {/* Top Bar - Big iPad Controls */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-[2rem] p-5 sm:p-6 shadow-sm border-2 border-amber-200">
+        <div className="flex items-center gap-3.5">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-extrabold text-base sm:text-lg transition cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" />
-            返回課文重點
+            <ArrowLeft className="w-5 h-5" />
+            返回課文
           </button>
           <div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-slate-800">{unitTitle}</h2>
-            <p className="text-xs text-slate-500 font-medium">互動闖關練習場・進度即時儲存至雲端</p>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">{unitTitle}</h2>
+            <p className="text-sm text-slate-500 font-bold">iPad 觸控大字闖關區</p>
           </div>
         </div>
 
         {/* Mode Switcher */}
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5">
           {[
             { id: 'flashcards', label: '🃏 點讀閃卡' },
             { id: 'quiz', label: '🎧 聽音選擇' },
-            { id: 'spelling', label: '🔤 雙模拼字' },
+            { id: 'spelling', label: '🔤 拼字闖關' },
             ...(scramblePool.length > 0 ? [{ id: 'scramble', label: '🚂 句子火車' }] : []),
           ].map((m) => (
             <button
               key={m.id}
               onClick={() => switchTab(m.id as PracticeTab)}
-              className={`px-4 py-2 rounded-2xl font-extrabold text-sm transition cursor-pointer ${
+              className={`px-5 py-3.5 rounded-2xl font-extrabold text-base sm:text-lg transition active:scale-95 cursor-pointer ${
                 tab === m.id
                   ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                  : 'bg-amber-50 text-amber-900 hover:bg-amber-100'
+                  : 'bg-amber-50 text-amber-950 hover:bg-amber-100'
               }`}
             >
               {m.label}
@@ -287,20 +284,20 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
         </div>
       </div>
 
-      {/* ==================== TAB 1: FLASHCARDS ==================== */}
+      {/* ==================== TAB 1: EXTRA-LARGE IPAD FLASHCARDS ==================== */}
       {tab === 'flashcards' && currentCard && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md border-2 border-amber-200 max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-bold text-slate-500">
+        <div className="bg-white rounded-[2rem] p-6 sm:p-10 shadow-md border-2 border-amber-200 max-w-3xl mx-auto">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+            <span className="text-lg font-extrabold text-slate-600">
               字卡 {cardIdx + 1} / {vocab.length}
             </span>
             <span
-              className={`px-3 py-1 rounded-full text-xs font-extrabold ${
+              className={`px-4 py-1.5 rounded-full text-sm sm:text-base font-extrabold ${
                 currentCard.tier === 'core'
                   ? 'bg-slate-900 text-white'
                   : currentCard.tier === 'phonics'
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-sky-100 text-sky-800'
+                    ? 'bg-emerald-100 text-emerald-900'
+                    : 'bg-sky-100 text-sky-900'
               }`}
             >
               {currentCard.tier === 'core'
@@ -311,7 +308,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
             </span>
           </div>
 
-          {/* 3D Flip Card */}
+          {/* Giant 3D Flip Card */}
           <div
             onClick={() => {
               setFlipped((f) => !f);
@@ -320,31 +317,35 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
             className="perspective-1000 cursor-pointer select-none my-4"
           >
             <div
-              className={`relative h-72 w-full rounded-3xl transition-transform duration-500 transform-style-3d ${
+              className={`relative h-88 sm:h-96 w-full rounded-[2rem] transition-transform duration-500 transform-style-3d ${
                 flipped ? 'rotate-y-180' : ''
               }`}
             >
               {/* Front */}
-              <div className="absolute inset-0 backface-hidden rounded-3xl bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 border-4 border-amber-300 flex flex-col items-center justify-center p-6 text-center shadow-inner">
-                <div className="text-7xl mb-4">{currentCard.emoji}</div>
-                <div className="text-4xl font-extrabold text-slate-900 tracking-wide">
+              <div className="absolute inset-0 backface-hidden rounded-[2rem] bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 border-4 border-amber-300 flex flex-col items-center justify-center p-8 text-center shadow-inner">
+                <div className="text-8xl mb-5">{currentCard.emoji}</div>
+                <div className="text-5xl sm:text-6xl font-black text-slate-900 tracking-wide">
                   {currentCard.en}
                 </div>
                 {currentCard.moe1200 && (
-                  <span className="mt-2 text-xs font-bold text-amber-700 bg-amber-200/70 px-2.5 py-0.5 rounded-full">
+                  <span className="mt-3 text-sm font-extrabold text-amber-800 bg-amber-200/80 px-3.5 py-1 rounded-full">
                     ★ 教育部基本 1,200 字詞
                   </span>
                 )}
-                <p className="text-xs text-slate-500 mt-4 font-bold">👆 點擊卡片翻看中文解釋並聽發音</p>
+                <p className="text-base text-slate-500 mt-6 font-extrabold">
+                  👆 點一下卡片翻面看中文解釋並聽發音
+                </p>
               </div>
 
               {/* Back */}
-              <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-3xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-4 border-sky-300 flex flex-col items-center justify-center p-6 text-center shadow-lg">
-                <div className="text-5xl mb-3">{currentCard.emoji}</div>
-                <div className="text-3xl font-extrabold mb-2">{currentCard.zh}</div>
-                <div className="text-xl font-bold text-sky-100">{currentCard.en}</div>
+              <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-[2rem] bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-4 border-sky-300 flex flex-col items-center justify-center p-8 text-center shadow-lg">
+                <div className="text-7xl mb-4">{currentCard.emoji}</div>
+                <div className="text-4xl sm:text-5xl font-extrabold mb-3">{currentCard.zh}</div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-sky-100">
+                  {currentCard.en}
+                </div>
                 {currentCard.category && (
-                  <span className="mt-3 text-xs bg-white/20 px-3 py-1 rounded-full font-bold">
+                  <span className="mt-4 text-sm bg-white/20 px-4 py-1.5 rounded-full font-extrabold">
                     {currentCard.category} {currentCard.page ? `｜${currentCard.page}` : ''}
                   </span>
                 )}
@@ -352,28 +353,28 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
             </div>
           </div>
 
-          {/* Audio + Familiarity Controls */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+          {/* Big Audio Buttons */}
+          <div className="grid grid-cols-2 gap-4 mt-7">
             <button
               onClick={() => speakEnglish(currentCard.en, 0.92)}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold shadow-sm cursor-pointer transition"
+              className="py-4 px-6 rounded-2xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-extrabold text-xl shadow-md flex items-center justify-center gap-2.5 cursor-pointer transition"
             >
-              <Volume2 className="w-5 h-5" />
+              <Volume2 className="w-6 h-6" />
               正常發音
             </button>
             <button
-              onClick={() => speakEnglish(currentCard.en, 0.6)}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-teal-500 hover:bg-teal-600 text-white font-extrabold shadow-sm cursor-pointer transition"
+              onClick={() => speakEnglish(currentCard.en, 0.58)}
+              className="py-4 px-6 rounded-2xl bg-teal-500 hover:bg-teal-600 active:scale-95 text-white font-extrabold text-xl shadow-md flex items-center justify-center gap-2.5 cursor-pointer transition"
             >
-              <Turtle className="w-5 h-5" />
+              <Turtle className="w-6 h-6" />
               慢速跟讀
             </button>
           </div>
 
-          {/* Self-Rating Stars */}
-          <div className="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          {/* Self-Rating Stars & Prev/Next */}
+          <div className="mt-7 pt-6 border-t-2 border-slate-100 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500">熟練度標記：</span>
+              <span className="text-base font-extrabold text-slate-600">熟練星等：</span>
               {[1, 2, 3].map((lvl) => {
                 const active = (currentCardProgress?.familiarity ?? 0) >= lvl;
                 return (
@@ -383,11 +384,11 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                       playSuccessChime();
                       onRecordWordResult(currentCard, lvl >= 2, lvl);
                     }}
-                    className="p-1 cursor-pointer transition hover:scale-110"
+                    className="p-2 cursor-pointer transition active:scale-125"
                     title={`標記 ${lvl} 顆星`}
                   >
                     <Star
-                      className={`w-6 h-6 ${
+                      className={`w-9 h-9 ${
                         active ? 'fill-amber-400 text-amber-400' : 'text-slate-300'
                       }`}
                     />
@@ -396,13 +397,13 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               })}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => {
                   setFlipped(false);
                   setCardIdx((i) => (i - 1 + vocab.length) % vocab.length);
                 }}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-sm cursor-pointer"
+                className="px-6 py-4 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 font-extrabold text-lg cursor-pointer"
               >
                 ← 上一張
               </button>
@@ -413,7 +414,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                   setCardIdx(next);
                   speakEnglish(vocab[next].en);
                 }}
-                className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-sm cursor-pointer shadow-sm"
+                className="px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-extrabold text-lg cursor-pointer shadow-md"
               >
                 下一張 →
               </button>
@@ -422,80 +423,83 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
         </div>
       )}
 
-      {/* ==================== TAB 2: LISTENING & VOCAB QUIZ ==================== */}
+      {/* ==================== TAB 2: LARGE QUIZ ==================== */}
       {tab === 'quiz' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md border-2 border-sky-200 max-w-2xl mx-auto">
+        <div className="bg-white rounded-[2rem] p-6 sm:p-10 shadow-md border-2 border-sky-200 max-w-3xl mx-auto">
           {quizDone ? (
-            <div className="text-center py-8 space-y-4">
-              <Trophy className="w-16 h-16 text-amber-400 mx-auto animate-bounce" />
-              <h3 className="text-3xl font-extrabold text-slate-800">
+            <div className="text-center py-10 space-y-5">
+              <Trophy className="w-20 h-20 text-amber-400 mx-auto animate-bounce" />
+              <h3 className="text-4xl font-extrabold text-slate-900">
                 闖關完成！得分 {quizScore} / {quizQuestions.length}
               </h3>
-              <p className="text-slate-600 font-medium">
-                答錯的單字已經自動幫 Liam 收進「錯題複習本」囉！
+              <p className="text-lg text-slate-600 font-bold">
+                答錯的單字已經自動收進頂端的「錯題本」囉！
               </p>
               <button
                 onClick={() => switchTab('quiz')}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold cursor-pointer"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-extrabold text-xl cursor-pointer shadow-md"
               >
-                <RotateCcw className="w-5 h-5" />
+                <RotateCcw className="w-6 h-6" />
                 再挑戰一次
               </button>
             </div>
           ) : quizQuestions[qIdx] ? (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-extrabold text-sky-700 bg-sky-50 px-3 py-1 rounded-full">
+              <div className="flex items-center justify-between mb-5">
+                <span className="text-base sm:text-lg font-extrabold text-sky-800 bg-sky-100 px-4 py-1.5 rounded-full">
                   第 {qIdx + 1} / {quizQuestions.length} 題
                 </span>
-                <span className="text-sm font-bold text-amber-600">目前得分：{quizScore}</span>
+                <span className="text-lg font-extrabold text-amber-600">目前得分：{quizScore}</span>
               </div>
 
-              <div className="bg-gradient-to-r from-sky-50 to-indigo-50 rounded-3xl p-6 text-center mb-6 border-2 border-sky-100">
+              <div className="bg-gradient-to-r from-sky-50 to-indigo-50 rounded-3xl p-7 text-center mb-6 border-2 border-sky-100">
                 {quizQuestions[qIdx].isListening ? (
-                  <div className="space-y-3">
-                    <p className="text-sm font-bold text-sky-700">🎧 聽音辨字：請聽發音選出正確的意思！</p>
-                    <div className="flex justify-center gap-3">
+                  <div className="space-y-4">
+                    <p className="text-lg font-extrabold text-sky-800">
+                      🎧 聽音辨字：請聽發音選出正確的意思！
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-3.5">
                       <button
                         onClick={() => speakEnglish(quizQuestions[qIdx].target.en, 0.9)}
-                        className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-lg shadow-md cursor-pointer"
+                        className="inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-extrabold text-xl shadow-md cursor-pointer"
                       >
-                        <Volume2 className="w-6 h-6" />
+                        <Volume2 className="w-7 h-7" />
                         播放題目發音
                       </button>
                       <button
                         onClick={() => speakEnglish(quizQuestions[qIdx].target.en, 0.58)}
-                        className="inline-flex items-center gap-1.5 px-4 py-3.5 rounded-2xl bg-teal-500 hover:bg-teal-600 text-white font-bold text-sm cursor-pointer"
+                        className="inline-flex items-center gap-2 px-5 py-4 rounded-2xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-extrabold text-lg cursor-pointer"
                       >
-                        <Turtle className="w-5 h-5" />
+                        <Turtle className="w-6 h-6" />
                         慢速
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-sm font-bold text-indigo-700">👀 看中文選英文：</p>
-                    <div className="text-5xl">{quizQuestions[qIdx].target.emoji}</div>
-                    <div className="text-3xl font-extrabold text-slate-800">
+                    <p className="text-lg font-extrabold text-indigo-700">👀 看中文選英文：</p>
+                    <div className="text-7xl py-1">{quizQuestions[qIdx].target.emoji}</div>
+                    <div className="text-4xl font-extrabold text-slate-900">
                       {quizQuestions[qIdx].target.zh}
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {quizQuestions[qIdx].options.map((opt) => {
                   const isTarget = opt.key === quizQuestions[qIdx].target.key;
                   const isPicked = selectedOpt === opt.key;
                   let btnStyle =
-                    'bg-slate-50 hover:bg-amber-50 border-slate-200 text-slate-800';
+                    'bg-slate-50 hover:bg-amber-50 border-slate-200 text-slate-900';
                   if (selectedOpt) {
                     if (isTarget) {
-                      btnStyle = 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-200';
+                      btnStyle =
+                        'bg-emerald-50 border-emerald-500 text-emerald-950 ring-4 ring-emerald-200';
                     } else if (isPicked) {
                       btnStyle = 'bg-rose-50 border-rose-400 text-rose-900';
                     } else {
-                      btnStyle = 'bg-slate-50 border-slate-200 opacity-55';
+                      btnStyle = 'bg-slate-50 border-slate-200 opacity-50';
                     }
                   }
 
@@ -503,15 +507,15 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                     <button
                       key={opt.key}
                       onClick={() => handleQuizPick(opt)}
-                      className={`p-4 rounded-2xl border-2 font-extrabold text-left flex items-center gap-3 transition cursor-pointer ${btnStyle}`}
+                      className={`p-6 rounded-3xl border-3 font-extrabold text-left flex items-center gap-4 transition active:scale-[0.98] cursor-pointer ${btnStyle}`}
                     >
-                      <span className="text-3xl">{opt.emoji}</span>
+                      <span className="text-5xl shrink-0">{opt.emoji}</span>
                       <div>
-                        <div className="text-lg">
+                        <div className="text-2xl sm:text-3xl leading-snug">
                           {quizQuestions[qIdx].isListening ? opt.zh : opt.en}
                         </div>
                         {selectedOpt && (
-                          <div className="text-xs font-semibold text-slate-500">
+                          <div className="text-base font-bold text-slate-600 mt-1">
                             {opt.en} — {opt.zh}
                           </div>
                         )}
@@ -522,10 +526,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               </div>
 
               {selectedOpt && (
-                <div className="mt-6 flex justify-end">
+                <div className="mt-7 flex justify-end">
                   <button
                     onClick={nextQuizQuestion}
-                    className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-base shadow-md cursor-pointer"
+                    className="px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-extrabold text-xl shadow-md cursor-pointer"
                   >
                     {qIdx + 1 >= quizQuestions.length ? '查看成績 🏆' : '下一題 →'}
                   </button>
@@ -536,37 +540,36 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
         </div>
       )}
 
-      {/* ==================== TAB 3: DUAL-MODE SPELLING ==================== */}
+      {/* ==================== TAB 3: IPAD GIANT TILE SPELLING ==================== */}
       {tab === 'spelling' && currentSpellWord && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md border-2 border-emerald-200 max-w-2xl mx-auto">
-          {/* Controls Header */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-100">
-            <div className="flex items-center gap-2">
+        <div className="bg-white rounded-[2rem] p-6 sm:p-10 shadow-md border-2 border-emerald-200 max-w-3xl mx-auto">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-5 mb-6 border-b-2 border-slate-100">
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setInputMode('tiles')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold cursor-pointer ${
+                className={`inline-flex items-center gap-2 px-4 py-3 rounded-2xl text-base font-extrabold cursor-pointer active:scale-95 ${
                   inputMode === 'tiles'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 text-slate-600'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-700'
                 }`}
               >
-                <LayoutGrid className="w-4 h-4" />
-                平板點選字母方塊
+                <LayoutGrid className="w-5 h-5" />
+                iPad 點選字母方塊
               </button>
               <button
                 onClick={() => setInputMode('keyboard')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold cursor-pointer ${
+                className={`inline-flex items-center gap-2 px-4 py-3 rounded-2xl text-base font-extrabold cursor-pointer active:scale-95 ${
                   inputMode === 'keyboard'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 text-slate-600'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-700'
                 }`}
               >
-                <Keyboard className="w-4 h-4" />
-                鍵盤打字輸入
+                <Keyboard className="w-5 h-5" />
+                鍵盤打字
               </button>
             </div>
 
-            <label className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+            <label className="inline-flex items-center gap-2.5 text-base font-extrabold text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
                 checked={onlyCoreWords}
@@ -577,29 +580,29 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                   setTypedText('');
                   setSpellStatus('idle');
                 }}
-                className="rounded accent-emerald-600 w-4 h-4"
+                className="rounded accent-emerald-600 w-5 h-5"
               />
-              只考黑色應用字＆自然發音字（跳過藍色認識字）
+              只考必背黑色字＆自然發音字
             </label>
           </div>
 
           {spellDone ? (
-            <div className="text-center py-8 space-y-4">
-              <Sparkles className="w-16 h-16 text-emerald-500 mx-auto" />
-              <h3 className="text-3xl font-extrabold text-slate-800">
+            <div className="text-center py-10 space-y-5">
+              <Sparkles className="w-20 h-20 text-emerald-500 mx-auto" />
+              <h3 className="text-4xl font-extrabold text-slate-900">
                 拼字大挑戰完成！答對 {spellScore} / {spellingPool.length} 字
               </h3>
               <button
                 onClick={() => switchTab('spelling')}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold cursor-pointer"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xl cursor-pointer"
               >
-                <RotateCcw className="w-5 h-5" />
+                <RotateCcw className="w-6 h-6" />
                 再練一輪
               </button>
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="flex items-center justify-between text-sm font-bold text-slate-500">
+              <div className="flex items-center justify-between text-lg font-extrabold text-slate-600">
                 <span>
                   單字 {spellIdx + 1} / {spellingPool.length}
                 </span>
@@ -607,35 +610,36 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               </div>
 
               {/* Prompt Box */}
-              <div className="bg-emerald-50/80 border-2 border-emerald-200 rounded-3xl p-6 text-center space-y-3">
-                <div className="text-6xl">{currentSpellWord.emoji}</div>
-                <div className="text-2xl font-extrabold text-slate-800">{currentSpellWord.zh}</div>
-                <div className="flex justify-center gap-2">
+              <div className="bg-emerald-50/80 border-2 border-emerald-200 rounded-3xl p-7 text-center space-y-4">
+                <div className="text-7xl">{currentSpellWord.emoji}</div>
+                <div className="text-3xl sm:text-4xl font-extrabold text-slate-900">
+                  {currentSpellWord.zh}
+                </div>
+                <div className="flex justify-center gap-3">
                   <button
                     onClick={() => speakEnglish(currentSpellWord.spellTarget, 0.88)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold cursor-pointer"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-lg font-extrabold cursor-pointer shadow-sm"
                   >
-                    <Volume2 className="w-4 h-4" />
+                    <Volume2 className="w-5 h-5" />
                     聽發音拼字
                   </button>
                   <button
                     onClick={() => speakEnglish(currentSpellWord.spellTarget, 0.55)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-lg font-extrabold cursor-pointer shadow-sm"
                   >
-                    <Turtle className="w-4 h-4" />
+                    <Turtle className="w-5 h-5" />
                     慢速
                   </button>
                 </div>
               </div>
 
-              {/* Input Area */}
+              {/* Giant iPad Letter Tiles */}
               {inputMode === 'tiles' ? (
-                <div className="space-y-4">
-                  {/* Answer Slots */}
-                  <div className="min-h-16 p-3 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-300 flex flex-wrap items-center justify-center gap-2">
+                <div className="space-y-5">
+                  <div className="min-h-22 p-4 rounded-3xl bg-slate-50 border-3 border-dashed border-slate-300 flex flex-wrap items-center justify-center gap-2.5">
                     {pickedTileIndices.length === 0 ? (
-                      <span className="text-sm text-slate-400 font-bold">
-                        請依序點選下方字母方塊拼出單字（共 {currentSpellWord.spellTarget.length} 個字元）
+                      <span className="text-lg text-slate-400 font-extrabold">
+                        請點選下方大字母方塊拼出單字（共 {currentSpellWord.spellTarget.length} 個字元）
                       </span>
                     ) : (
                       pickedTileIndices.map((tileIdx, pos) => (
@@ -645,7 +649,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                           onClick={() =>
                             setPickedTileIndices((prev) => prev.filter((_, idx) => idx !== pos))
                           }
-                          className="w-11 h-12 rounded-xl bg-amber-400 text-slate-900 font-extrabold text-xl shadow-sm hover:bg-amber-300 cursor-pointer"
+                          className="w-15 h-16 sm:w-16 sm:h-18 rounded-2xl bg-amber-400 text-slate-950 font-black text-3xl shadow-md active:scale-90 cursor-pointer"
                         >
                           {letterTiles[tileIdx]}
                         </button>
@@ -653,8 +657,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                     )}
                   </div>
 
-                  {/* Available Letter Tiles */}
-                  <div className="flex flex-wrap justify-center gap-2.5">
+                  <div className="flex flex-wrap justify-center gap-3">
                     {letterTiles.map((ch, idx) => {
                       const used = pickedTileIndices.includes(idx);
                       return (
@@ -662,10 +665,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                           key={idx}
                           disabled={used || spellStatus !== 'idle'}
                           onClick={() => setPickedTileIndices((prev) => [...prev, idx])}
-                          className={`w-12 h-13 rounded-2xl font-extrabold text-xl border-b-4 transition cursor-pointer ${
+                          className={`w-16 h-17 sm:w-18 sm:h-19 rounded-2xl font-black text-3xl border-b-4 transition active:scale-90 cursor-pointer ${
                             used
                               ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'
-                              : 'bg-white hover:bg-emerald-50 text-slate-800 border-emerald-300 shadow-sm active:translate-y-0.5'
+                              : 'bg-white hover:bg-emerald-50 text-slate-900 border-emerald-400 shadow-md'
                           }`}
                         >
                           {ch === ' ' ? '␣' : ch}
@@ -688,36 +691,35 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                       }
                     }}
                     placeholder={`輸入英文單字（${currentSpellWord.spellTarget.length} 個字元）`}
-                    className="w-full text-center text-2xl font-extrabold py-4 px-4 rounded-2xl border-2 border-emerald-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none"
+                    className="w-full text-center text-4xl font-black py-5 px-5 rounded-3xl border-3 border-emerald-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none"
                   />
                 </div>
               )}
 
-              {/* Feedback Banner */}
               {spellStatus !== 'idle' && (
                 <div
-                  className={`p-4 rounded-2xl flex items-center justify-between ${
+                  className={`p-5 rounded-3xl flex flex-wrap items-center justify-between gap-3 ${
                     spellStatus === 'correct'
-                      ? 'bg-emerald-50 border-2 border-emerald-400 text-emerald-900'
-                      : 'bg-rose-50 border-2 border-rose-300 text-rose-900'
+                      ? 'bg-emerald-50 border-3 border-emerald-400 text-emerald-950'
+                      : 'bg-rose-50 border-3 border-rose-300 text-rose-950'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 font-extrabold">
+                  <div className="flex items-center gap-3 text-xl font-extrabold">
                     {spellStatus === 'correct' ? (
                       <>
-                        <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                        <CheckCircle2 className="w-8 h-8 text-emerald-600 shrink-0" />
                         <span>太棒了！完全正確：{currentSpellWord.spellTarget}</span>
                       </>
                     ) : (
                       <>
-                        <XCircle className="w-6 h-6 text-rose-600" />
-                        <span>正確拼法是：{currentSpellWord.spellTarget}（已加入錯題複習）</span>
+                        <XCircle className="w-8 h-8 text-rose-600 shrink-0" />
+                        <span>正確拼法是：{currentSpellWord.spellTarget}（已收進錯題本）</span>
                       </>
                     )}
                   </div>
                   <button
                     onClick={nextSpellingWord}
-                    className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-extrabold text-sm cursor-pointer"
+                    className="px-7 py-3.5 rounded-2xl bg-slate-900 text-white font-extrabold text-lg cursor-pointer active:scale-95"
                   >
                     下一字 →
                   </button>
@@ -725,20 +727,30 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               )}
 
               {spellStatus === 'idle' && (
-                <div className="flex justify-center gap-3">
+                <div className="flex flex-wrap justify-center gap-3.5">
+                  {inputMode === 'tiles' && (
+                    <button
+                      onClick={() => setPickedTileIndices((prev) => prev.slice(0, -1))}
+                      disabled={pickedTileIndices.length === 0}
+                      className="inline-flex items-center gap-2 px-5 py-4 rounded-2xl bg-amber-100 hover:bg-amber-200 disabled:opacity-40 text-amber-950 font-extrabold text-lg cursor-pointer active:scale-95"
+                    >
+                      <Delete className="w-5 h-5" />
+                      退一格
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setPickedTileIndices([]);
                       setTypedText('');
                     }}
-                    className="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm cursor-pointer"
+                    className="px-6 py-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-lg cursor-pointer active:scale-95"
                   >
                     清除重拼
                   </button>
                   <button
                     onClick={checkSpelling}
                     disabled={!currentBuiltSpelling}
-                    className="px-8 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-extrabold text-base shadow-md cursor-pointer"
+                    className="px-10 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-extrabold text-xl shadow-md cursor-pointer active:scale-95"
                   >
                     送出檢查 ✓
                   </button>
@@ -749,51 +761,53 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
         </div>
       )}
 
-      {/* ==================== TAB 4: SENTENCE SCRAMBLE TRAIN ==================== */}
+      {/* ==================== TAB 4: GIANT SENTENCE SCRAMBLE TRAIN ==================== */}
       {tab === 'scramble' && currentSentence && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md border-2 border-purple-200 max-w-2xl mx-auto">
+        <div className="bg-white rounded-[2rem] p-6 sm:p-10 shadow-md border-2 border-purple-200 max-w-3xl mx-auto">
           {scrDone ? (
-            <div className="text-center py-8 space-y-4">
-              <Trophy className="w-16 h-16 text-purple-500 mx-auto" />
-              <h3 className="text-3xl font-extrabold text-slate-800">
+            <div className="text-center py-10 space-y-5">
+              <Trophy className="w-20 h-20 text-purple-500 mx-auto" />
+              <h3 className="text-4xl font-extrabold text-slate-900">
                 句子火車全數到站！得分 {scrScore} / {scramblePool.length}
               </h3>
               <button
                 onClick={() => switchTab('scramble')}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold cursor-pointer"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-extrabold text-xl cursor-pointer"
               >
-                <RotateCcw className="w-5 h-5" />
+                <RotateCcw className="w-6 h-6" />
                 再玩一次
               </button>
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="flex items-center justify-between text-sm font-bold text-slate-500">
+              <div className="flex items-center justify-between text-lg font-extrabold text-slate-600">
                 <span>
                   第 {scrIdx + 1} / {scramblePool.length} 句
                 </span>
                 <span>得分：{scrScore}</span>
               </div>
 
-              <div className="bg-purple-50 border-2 border-purple-200 rounded-3xl p-6 text-center space-y-3">
-                <span className="inline-block px-3 py-1 rounded-full bg-purple-200 text-purple-900 text-xs font-extrabold">
-                  🚂 請將單字車廂排成正確的英文句子
+              <div className="bg-purple-50 border-2 border-purple-200 rounded-3xl p-7 text-center space-y-4">
+                <span className="inline-block px-4 py-1.5 rounded-full bg-purple-200 text-purple-950 text-sm font-extrabold">
+                  🚂 請點選單字車廂排成正確的英文句子
                 </span>
-                <div className="text-2xl font-extrabold text-slate-800">{currentSentence.zh}</div>
+                <div className="text-3xl font-extrabold text-slate-900">{currentSentence.zh}</div>
                 <button
                   onClick={() => speakEnglish(currentSentence.en)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-lg font-extrabold cursor-pointer shadow-sm"
                 >
-                  <Volume2 className="w-4 h-4" />
+                  <Volume2 className="w-5 h-5" />
                   聽句子提示
                 </button>
               </div>
 
               {/* Train Track */}
-              <div className="min-h-20 p-4 rounded-2xl bg-amber-50/70 border-2 border-dashed border-amber-300 flex flex-wrap items-center gap-2">
-                <span className="text-2xl mr-1">🚂</span>
+              <div className="min-h-24 p-5 rounded-3xl bg-amber-50/70 border-3 border-dashed border-amber-300 flex flex-wrap items-center gap-3">
+                <span className="text-4xl mr-1">🚂</span>
                 {pickedWordIndices.length === 0 ? (
-                  <span className="text-sm text-slate-400 font-bold">點選下方單字接上火車車廂...</span>
+                  <span className="text-lg text-slate-400 font-extrabold">
+                    點選下方大單字卡接上火車車廂...
+                  </span>
                 ) : (
                   pickedWordIndices.map((wIdx, pos) => (
                     <button
@@ -802,7 +816,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                       onClick={() =>
                         setPickedWordIndices((prev) => prev.filter((_, idx) => idx !== pos))
                       }
-                      className="px-4 py-2.5 rounded-xl bg-purple-600 text-white font-extrabold text-lg shadow-sm cursor-pointer"
+                      className="px-5 py-3.5 rounded-2xl bg-purple-600 text-white font-extrabold text-2xl shadow-md active:scale-95 cursor-pointer"
                     >
                       {wordTokens[wIdx]}
                     </button>
@@ -811,7 +825,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               </div>
 
               {/* Scrambled Word Bank */}
-              <div className="flex flex-wrap justify-center gap-3">
+              <div className="flex flex-wrap justify-center gap-3.5">
                 {wordTokens.map((tok, idx) => {
                   const used = pickedWordIndices.includes(idx);
                   return (
@@ -822,10 +836,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                         speakEnglish(tok);
                         setPickedWordIndices((prev) => [...prev, idx]);
                       }}
-                      className={`px-4 py-3 rounded-2xl font-extrabold text-lg border-2 transition cursor-pointer ${
+                      className={`px-6 py-4 rounded-2xl font-extrabold text-2xl border-3 transition active:scale-95 cursor-pointer ${
                         used
                           ? 'bg-slate-100 text-slate-300 border-slate-200'
-                          : 'bg-white hover:bg-purple-50 text-slate-800 border-purple-300 shadow-sm'
+                          : 'bg-white hover:bg-purple-50 text-slate-900 border-purple-300 shadow-md'
                       }`}
                     >
                       {tok}
@@ -836,36 +850,36 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
               {scrStatus !== 'idle' ? (
                 <div
-                  className={`p-4 rounded-2xl flex items-center justify-between ${
+                  className={`p-5 rounded-3xl flex flex-wrap items-center justify-between gap-3 ${
                     scrStatus === 'correct'
-                      ? 'bg-emerald-50 border-2 border-emerald-400 text-emerald-900'
-                      : 'bg-rose-50 border-2 border-rose-300 text-rose-900'
+                      ? 'bg-emerald-50 border-3 border-emerald-400 text-emerald-950'
+                      : 'bg-rose-50 border-3 border-rose-300 text-rose-950'
                   }`}
                 >
-                  <div className="font-extrabold">
+                  <div className="text-xl font-extrabold">
                     {scrStatus === 'correct'
                       ? `🎉 太強了！${currentSentence.en}`
                       : `💡 正確句子是：${currentSentence.en}`}
                   </div>
                   <button
                     onClick={nextScramble}
-                    className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-extrabold text-sm cursor-pointer"
+                    className="px-7 py-3.5 rounded-2xl bg-slate-900 text-white font-extrabold text-lg cursor-pointer active:scale-95"
                   >
                     下一句 →
                   </button>
                 </div>
               ) : (
-                <div className="flex justify-center gap-3">
+                <div className="flex justify-center gap-4">
                   <button
                     onClick={() => setPickedWordIndices([])}
-                    className="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold text-sm cursor-pointer"
+                    className="px-6 py-4 rounded-2xl bg-slate-100 text-slate-800 font-extrabold text-lg cursor-pointer active:scale-95"
                   >
-                    重排
+                    全部重排
                   </button>
                   <button
                     onClick={checkScramble}
                     disabled={pickedWordIndices.length !== wordTokens.length}
-                    className="px-8 py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white font-extrabold shadow-md cursor-pointer"
+                    className="px-10 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white font-extrabold text-xl shadow-md cursor-pointer active:scale-95"
                   >
                     發車檢查 ✓
                   </button>

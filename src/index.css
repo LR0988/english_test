@@ -1,8 +1,35 @@
 @import "tailwindcss";
 
 @layer base {
+  html {
+    font-size: 17px;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (min-width: 768px) {
+    html {
+      font-size: 18px;
+    }
+  }
+
+  html.font-xl {
+    font-size: 19px;
+  }
+
+  @media (min-width: 768px) {
+    html.font-xl {
+      font-size: 20.5px;
+    }
+  }
+
   body {
     font-family: 'Nunito', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+    touch-action: manipulation;
+  }
+
+  button, a, input, label {
+    touch-action: manipulation;
   }
 
   h1, h2, h3, .font-display {
@@ -33,4 +60,13 @@
 
 .animate-float {
   animation: floatSlow 3.2s ease-in-out infinite;
+}
+
+/* Hide horizontal scrollbar on iPad pill strips while keeping smooth touch scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

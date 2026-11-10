@@ -84,7 +84,6 @@ const BOARD_TILES = [
   },
 ];
 
-// Distractor words mixed into the Witch's Hat cloud on p. 112
 const CLOUD_DISTRACTORS = [
   'apple',
   'dog',
@@ -104,12 +103,9 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
   onToggleItem,
   onAwardXp,
 }) => {
-  // ==================== 1. Magic e State ====================
   const [foldedMap, setFoldedMap] = useState<Record<string, boolean>>({});
-
-  // ==================== 2. Beach RPS Board Game State ====================
   const [playerPos, setPlayerPos] = useState(0);
-  const [rpsMessage, setRpsMessage] = useState('出拳（剪刀・石頭・布）贏過 Boka 就能前進闖關！');
+  const [rpsMessage, setRpsMessage] = useState('點選「剪刀・石頭・布」贏過 Boka 就能前進闖關！');
   const [pendingTileIdx, setPendingTileIdx] = useState<number | null>(null);
   const [boardWon, setBoardWon] = useState(false);
 
@@ -131,14 +127,14 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
 
     if (!win) {
       playGentleRetry();
-      setRpsMessage(`哎呀！Boka 出 ${emojiMap[bot]} 贏了，別氣餒，再猜拳一次前進 1 格！`);
+      setRpsMessage(`哎呀！Boka 出 ${emojiMap[bot]} 贏了，答對題目仍可前進 1 格喔！`);
       const step = Math.min(BOARD_TILES.length - 1, playerPos + 1);
       setPendingTileIdx(step);
     } else {
       playSuccessChime();
       const jump = 2;
       const step = Math.min(BOARD_TILES.length - 1, playerPos + jump);
-      setRpsMessage(`🎉 猜拳獲勝！Liam 出 ${emojiMap[choice]} 贏了 ${emojiMap[bot]}！答對題目即可前進到第 ${step} 格！`);
+      setRpsMessage(`🎉 猜拳獲勝！Liam 出 ${emojiMap[choice]} 贏了 ${emojiMap[bot]}！答對題目直衝第 ${step} 格！`);
       setPendingTileIdx(step);
     }
   };
@@ -165,7 +161,6 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
     }
   };
 
-  // ==================== 3. Word Hunt Cloud ====================
   const witchCloudWords = useMemo(() => {
     const targets = WORD_HUNT_TARGETS.map((t) => ({
       word: t.word,
@@ -179,7 +174,6 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
       isTarget: false,
       hintZh: '',
     }));
-    // Deterministic interleave so the hat shape looks rich and neat
     const combined = [...targets];
     extras.forEach((ex, i) => {
       combined.splice(Math.min(combined.length, i * 2 + 1), 0, ex);
@@ -189,12 +183,10 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
 
   const foundHuntCount = WORD_HUNT_TARGETS.filter((t) => completedItems[t.key]).length;
 
-  // ==================== 4. Full A-Z Index ====================
   const [searchQuery, setSearchQuery] = useState('');
   const [letterFilter, setLetterFilter] = useState('ALL');
   const allIndexedWords = useMemo(() => {
     const raw = getAllVocabWithUnit();
-    // Deduplicate by spellTarget lowercase while preserving unit references
     const map = new Map<string, (typeof raw)[0]>();
     for (const item of raw) {
       const k = item.en.toLowerCase();
@@ -218,25 +210,23 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
     return matchesLetter && matchesSearch;
   });
 
-  // ==================== RENDER SUBVIEWS ====================
+  // ==================== 1. MAGIC E FLIP CARDS ====================
   if (activeSubView === 'magic_e') {
     return (
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border-2 border-amber-200 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-100 text-amber-800">
-              書末拉頁配件｜Magic e 折疊翻翻字卡
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-              🪄 Magic e 魔法字尾翻翻卡
-            </h2>
-            <p className="text-sm text-slate-600 font-medium">
-              點擊卡片把右邊的魔法 <code className="font-extrabold text-amber-700">e</code> 摺進來，聽聽看短母音怎麼一秒變成長母音！
-            </p>
-          </div>
+      <div className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border-2 border-amber-200 space-y-6">
+        <div>
+          <span className="text-sm font-extrabold px-4 py-1 rounded-full bg-amber-100 text-amber-900">
+            書末拉頁配件｜Magic e 折疊翻翻字卡
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
+            🪄 Magic e 魔法字尾大翻翻卡
+          </h2>
+          <p className="text-lg text-slate-600 font-bold mt-1">
+            用手指點一下字卡，把右邊的魔法 <code className="font-black text-amber-700">e</code> 摺進來，聽聽短母音一秒變長母音！
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {MAGIC_E_PAIRS.map((pair) => {
             const hasE = !!foldedMap[pair.shortWord];
             const keyId = `magice_${pair.shortWord}`;
@@ -252,36 +242,35 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
                     onToggleItem(keyId, 'magic_e');
                   }
                 }}
-                className={`rounded-3xl border-3 p-5 cursor-pointer transition select-none relative overflow-hidden ${
+                className={`rounded-3xl border-4 p-6 sm:p-7 cursor-pointer transition active:scale-[0.98] select-none ${
                   hasE
-                    ? 'bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 text-white border-amber-500 shadow-lg'
-                    : 'bg-amber-50/60 hover:bg-amber-100/70 text-slate-900 border-amber-200'
+                    ? 'bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 text-white border-amber-500 shadow-xl'
+                    : 'bg-amber-50/70 hover:bg-amber-100/70 text-slate-900 border-amber-200'
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <span
-                    className={`text-xs font-extrabold px-2.5 py-0.5 rounded-full ${
-                      hasE ? 'bg-white/25 text-white' : 'bg-amber-200 text-amber-900'
+                    className={`text-base font-extrabold px-3.5 py-1 rounded-full ${
+                      hasE ? 'bg-white/25 text-white' : 'bg-amber-200 text-amber-950'
                     }`}
                   >
                     {pair.vowel}
                   </span>
-                  <Volume2 className="w-4 h-4 opacity-80" />
+                  <Volume2 className="w-6 h-6 opacity-85" />
                 </div>
 
-                <div className="flex items-center justify-center gap-1 my-3">
-                  <span className="text-4xl mr-2">
+                <div className="flex items-center justify-center gap-2 my-4">
+                  <span className="text-6xl mr-3">
                     {hasE ? pair.longEmoji : pair.shortEmoji}
                   </span>
-                  <span className="text-4xl font-black tracking-wider">
+                  <span className="text-5xl sm:text-6xl font-black tracking-wider">
                     {hasE ? pair.longWord.slice(0, -1) : pair.shortWord}
                   </span>
-                  {/* Foldable Magic e Flap */}
                   <span
-                    className={`inline-flex items-center justify-center w-10 h-12 rounded-xl font-black text-4xl transition-all duration-300 border-l-2 border-dashed ${
+                    className={`inline-flex items-center justify-center w-14 h-16 rounded-2xl font-black text-5xl sm:text-6xl transition-all duration-300 border-l-3 border-dashed ${
                       hasE
-                        ? 'bg-white text-rose-600 border-rose-300 scale-105 shadow-md ml-0.5'
-                        : 'bg-slate-200/70 text-slate-400 border-slate-300 scale-90 opacity-50 ml-2'
+                        ? 'bg-white text-rose-600 border-rose-300 scale-105 shadow-lg ml-1'
+                        : 'bg-slate-200/80 text-slate-400 border-slate-300 scale-90 opacity-50 ml-3'
                     }`}
                   >
                     e
@@ -289,11 +278,11 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
                 </div>
 
                 <div className="text-center">
-                  <div className="text-lg font-extrabold">
+                  <div className="text-2xl font-extrabold">
                     {hasE ? `${pair.longWord}（${pair.longZh}）` : `${pair.shortWord}（${pair.shortZh}）`}
                   </div>
-                  <div className={`text-xs font-bold mt-1 ${hasE ? 'text-amber-50' : 'text-slate-500'}`}>
-                    {hasE ? '👆 點擊把 e 打開變回短母音' : '👆 點擊把魔法 e 摺進來！'}
+                  <div className={`text-base font-bold mt-1.5 ${hasE ? 'text-amber-50' : 'text-slate-500'}`}>
+                    {hasE ? '👆 點一下把 e 打開變回短母音' : '👆 點一下把魔法 e 摺進來！'}
                   </div>
                 </div>
               </div>
@@ -304,17 +293,18 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
     );
   }
 
+  // ==================== 2. BEACH BOARD GAME ====================
   if (activeSubView === 'board_game') {
     const activeQuestionTile = pendingTileIdx !== null ? BOARD_TILES[pendingTileIdx] : null;
     return (
-      <div className="bg-gradient-to-br from-sky-50 via-amber-50 to-yellow-100 rounded-3xl p-6 sm:p-8 shadow-sm border-2 border-amber-300 space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-gradient-to-br from-sky-50 via-amber-50 to-yellow-100 rounded-[2rem] p-6 sm:p-8 shadow-sm border-3 border-amber-300 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-sky-600 text-white">
-              書末拉頁桌遊｜Rock, Paper, Scissors 沙灘闖關大冒險
+            <span className="text-sm font-extrabold px-4 py-1 rounded-full bg-sky-600 text-white">
+              書末拉頁桌遊｜Rock, Paper, Scissors
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-              🏖️ 沙灘猜拳闖關桌遊（四大句型總複習）
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
+              🏖️ 沙灘猜拳闖關桌遊
             </h2>
           </div>
 
@@ -323,39 +313,39 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
               setPlayerPos(0);
               setPendingTileIdx(null);
               setBoardWon(false);
-              setRpsMessage('新的一局開始！請出拳（剪刀・石頭・布）前進！');
+              setRpsMessage('新的一局開始！請點選剪刀・石頭・布前進！');
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-white hover:bg-slate-50 border-2 border-slate-200 text-slate-800 text-base font-extrabold cursor-pointer active:scale-95"
           >
-            <RotateCcw className="w-4 h-4" />
-            重新開始桌遊
+            <RotateCcw className="w-5 h-5" />
+            重新開始
           </button>
         </div>
 
-        {/* Status Banner */}
-        <div className="bg-white rounded-2xl p-4 border-2 border-amber-300 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Dices className="w-8 h-8 text-amber-500 shrink-0" />
-            <p className="font-extrabold text-slate-800">{rpsMessage}</p>
+        {/* Status & Big RPS Buttons */}
+        <div className="bg-white rounded-3xl p-6 border-2 border-amber-300 space-y-5">
+          <div className="flex items-center gap-3.5">
+            <Dices className="w-10 h-10 text-amber-500 shrink-0" />
+            <p className="text-xl sm:text-2xl font-extrabold text-slate-900">{rpsMessage}</p>
           </div>
 
           {pendingTileIdx === null && !boardWon && (
-            <div className="flex gap-2 shrink-0">
+            <div className="grid grid-cols-3 gap-4">
               <button
                 onClick={() => playRps('scissors')}
-                className="px-4 py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold shadow-sm cursor-pointer"
+                className="py-5 rounded-3xl bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-extrabold text-2xl shadow-md cursor-pointer"
               >
                 ✌️ 剪刀
               </button>
               <button
                 onClick={() => playRps('rock')}
-                className="px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold shadow-sm cursor-pointer"
+                className="py-5 rounded-3xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-extrabold text-2xl shadow-md cursor-pointer"
               >
                 ✊ 石頭
               </button>
               <button
                 onClick={() => playRps('paper')}
-                className="px-4 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold shadow-sm cursor-pointer"
+                className="py-5 rounded-3xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-extrabold text-2xl shadow-md cursor-pointer"
               >
                 ✋ 布
               </button>
@@ -363,28 +353,30 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
           )}
         </div>
 
-        {/* Question Modal / Card when stepping onto a tile */}
+        {/* Question Card */}
         {activeQuestionTile && (
-          <div className="bg-white rounded-3xl p-6 border-3 border-sky-400 shadow-lg space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-sky-100 text-sky-800">
+          <div className="bg-white rounded-3xl p-7 border-4 border-sky-400 shadow-xl space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-base font-extrabold px-4 py-1.5 rounded-full bg-sky-100 text-sky-900">
                 第 {activeQuestionTile.pos} 格挑戰：{activeQuestionTile.label}
               </span>
               <button
                 onClick={() => speakEnglish(activeQuestionTile.q.replace(/\(.*\)/, ''))}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-sky-500 text-white text-xs font-bold cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-sky-600 text-white text-base font-extrabold cursor-pointer active:scale-95"
               >
-                <Volume2 className="w-3.5 h-3.5" />
+                <Volume2 className="w-5 h-5" />
                 唸題目
               </button>
             </div>
-            <div className="text-xl font-extrabold text-slate-900">{activeQuestionTile.q}</div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              {activeQuestionTile.q}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {activeQuestionTile.options.map((opt) => (
                 <button
                   key={opt}
                   onClick={() => answerBoardQuestion(opt)}
-                  className="p-4 rounded-2xl border-2 border-slate-200 hover:border-sky-400 hover:bg-sky-50 font-extrabold text-slate-800 text-left cursor-pointer transition"
+                  className="p-5 rounded-3xl border-3 border-slate-200 hover:border-sky-400 hover:bg-sky-50 font-extrabold text-xl sm:text-2xl text-slate-900 text-left cursor-pointer active:scale-95 transition"
                 >
                   {opt}
                 </button>
@@ -393,25 +385,25 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
           </div>
         )}
 
-        {/* Beach Path Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-9 gap-2.5">
+        {/* 3x3 Spacious Beach Path Grid for iPad */}
+        <div className="grid grid-cols-3 gap-4">
           {BOARD_TILES.map((t) => {
             const isHere = playerPos === t.pos;
             const passed = playerPos > t.pos;
             return (
               <div
                 key={t.pos}
-                className={`p-3 rounded-2xl border-2 text-center flex flex-col items-center justify-between min-h-28 transition ${
+                className={`p-5 rounded-3xl border-3 text-center flex flex-col items-center justify-between min-h-36 transition ${
                   isHere
-                    ? 'bg-amber-400 border-amber-600 text-slate-950 shadow-md scale-105'
+                    ? 'bg-amber-400 border-amber-600 text-slate-950 shadow-lg scale-[1.03]'
                     : passed
-                      ? 'bg-emerald-100 border-emerald-300 text-emerald-900'
-                      : 'bg-white/90 border-amber-200 text-slate-700'
+                      ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
+                      : 'bg-white/95 border-amber-200 text-slate-800'
                 }`}
               >
-                <span className="text-[11px] font-black opacity-75">#{t.pos}</span>
-                <div className="text-2xl my-1">{isHere ? '🦁' : passed ? '⭐' : '🐚'}</div>
-                <span className="text-xs font-extrabold leading-tight">{t.label}</span>
+                <span className="text-sm font-black opacity-75">第 {t.pos} 格</span>
+                <div className="text-5xl my-2">{isHere ? '🦁' : passed ? '⭐' : '🐚'}</div>
+                <span className="text-base sm:text-lg font-extrabold">{t.label}</span>
               </div>
             );
           })}
@@ -420,34 +412,34 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
     );
   }
 
+  // ==================== 3. WITCH'S HAT WORD HUNT ====================
   if (activeSubView === 'word_hunt') {
     return (
-      <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+      <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 text-white rounded-[2rem] p-6 sm:p-8 shadow-xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-400 text-slate-950">
+            <span className="text-sm font-extrabold px-4 py-1 rounded-full bg-amber-400 text-slate-950">
               第 112 頁｜Word Hunt 女巫帽尋字雲
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold mt-2 flex items-center gap-2">
-              🧙🏻‍♀️ 女巫帽尋字大任務（Witch's Hat Word Hunt）
+            <h2 className="text-3xl sm:text-4xl font-extrabold mt-2">
+              🧙🏻‍♀️ 女巫帽尋字大任務
             </h2>
-            <p className="text-sm text-purple-200 font-medium mt-1">
-              拿出放大鏡 🔍，在魔法單字雲裡找出課本第 103–108 頁指定的 14 個通關單字！
+            <p className="text-base sm:text-lg text-purple-200 font-bold mt-1">
+              點擊下方大單字雲，找出課本指定的 14 個通關單字！
             </p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/20 text-center">
-            <div className="text-xs text-purple-200 font-bold">尋獲進度</div>
-            <div className="text-2xl font-black text-amber-300">
+          <div className="bg-white/15 backdrop-blur-sm px-6 py-4 rounded-3xl border border-white/25 text-center">
+            <div className="text-sm text-purple-200 font-extrabold">尋獲進度</div>
+            <div className="text-3xl font-black text-amber-300">
               {foundHuntCount} / {WORD_HUNT_TARGETS.length}
             </div>
           </div>
         </div>
 
-        {/* Witch Hat Word Cloud */}
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-purple-400/30 flex flex-col items-center space-y-3">
-          <div className="text-5xl">🧙🏻‍♀️</div>
-          <div className="flex flex-wrap justify-center gap-2.5 max-w-2xl">
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-7 border border-purple-400/30 flex flex-col items-center space-y-4">
+          <div className="text-6xl">🧙🏻‍♀️</div>
+          <div className="flex flex-wrap justify-center gap-3.5 max-w-3xl">
             {witchCloudWords.map((item) => {
               const found = item.isTarget && !!completedItems[item.key];
               return (
@@ -468,10 +460,10 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
                       playGentleRetry();
                     }
                   }}
-                  className={`px-4 py-2 rounded-full font-extrabold text-base sm:text-lg transition cursor-pointer ${
+                  className={`px-6 py-3.5 rounded-full font-extrabold text-xl sm:text-2xl transition active:scale-95 cursor-pointer ${
                     found
                       ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/30 scale-105'
-                      : 'bg-white/15 hover:bg-white/25 text-white border border-white/20'
+                      : 'bg-white/15 hover:bg-white/25 text-white border-2 border-white/25'
                   }`}
                 >
                   {found ? `⭐ ${item.word}` : item.word}
@@ -481,21 +473,20 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
           </div>
         </div>
 
-        {/* Target Clues List */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {WORD_HUNT_TARGETS.map((t) => {
             const done = !!completedItems[t.key];
             return (
               <div
                 key={t.key}
-                className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-between ${
+                className={`p-4 rounded-2xl border-2 text-base font-extrabold flex items-center justify-between ${
                   done
-                    ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-200'
-                    : 'bg-white/5 border-white/10 text-purple-200'
+                    ? 'bg-emerald-500/25 border-emerald-400/60 text-emerald-100'
+                    : 'bg-white/5 border-white/15 text-purple-100'
                 }`}
               >
                 <span>🔍 {t.hintZh}</span>
-                <span>{done ? `✅ ${t.word}` : '❓'}</span>
+                <span className="text-lg">{done ? `✅ ${t.word}` : '❓'}</span>
               </div>
             );
           })}
@@ -504,30 +495,32 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
     );
   }
 
-  // ==================== 4. INDEX & SELF-CHECKLIST (pp. 103–111) ====================
+  // ==================== 4. INDEX & SELF-CHECKLIST ====================
   const alphabet = ['ALL', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
 
   return (
     <div className="space-y-8">
-      {/* Full Self-Checklist Summary (pp. 103–108) */}
-      <section className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border-2 border-emerald-200 space-y-5">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-emerald-600" />
-          <h2 className="text-2xl font-extrabold text-slate-900">
+      <section className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border-2 border-emerald-200 space-y-6">
+        <div className="flex items-center gap-3">
+          <Sparkles className="w-8 h-8 text-emerald-600" />
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
             📋 全書自我檢核總表 Self-Checklist（第 103–108 頁）
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-5">
           {UNITS_DATA.filter((u) => u.checklistItems && u.checklistItems.length > 0).map((u) => (
-            <div key={u.id} className="rounded-2xl border-2 border-slate-100 p-4 space-y-2.5 bg-slate-50/50">
-              <div className="font-extrabold text-slate-800 flex items-center gap-2">
-                <span>{u.heroEmoji}</span>
+            <div
+              key={u.id}
+              className="rounded-3xl border-2 border-slate-200 p-5 sm:p-6 space-y-3.5 bg-slate-50/50"
+            >
+              <div className="text-xl sm:text-2xl font-extrabold text-slate-900 flex items-center gap-2.5">
+                <span className="text-3xl">{u.heroEmoji}</span>
                 <span>
                   {u.badge}: {u.titleEn}
                 </span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {u.checklistItems!.map((chk) => {
                   const done = !!completedItems[chk.key];
                   return (
@@ -537,20 +530,20 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
                         onToggleItem(chk.key, 'checklist');
                         if (!done) playSuccessChime();
                       }}
-                      className={`w-full p-2.5 rounded-xl border text-left flex items-center gap-2.5 text-xs font-bold cursor-pointer transition ${
+                      className={`w-full p-4 rounded-2xl border-2 text-left flex items-center gap-3.5 cursor-pointer active:scale-[0.99] transition ${
                         done
-                          ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-amber-50/50'
+                          ? 'bg-emerald-50 border-emerald-400 text-emerald-950'
+                          : 'bg-white border-slate-200 text-slate-800 hover:bg-amber-50/50'
                       }`}
                     >
                       {done ? (
-                        <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <CheckSquare className="w-7 h-7 text-emerald-600 shrink-0" />
                       ) : (
-                        <Square className="w-4 h-4 text-slate-400 shrink-0" />
+                        <Square className="w-7 h-7 text-slate-400 shrink-0" />
                       )}
                       <div>
-                        <div>{chk.labelZh}</div>
-                        <div className="text-[11px] text-slate-500">{chk.labelEn}</div>
+                        <div className="text-lg font-extrabold">{chk.labelZh}</div>
+                        <div className="text-base font-bold text-slate-500">{chk.labelEn}</div>
                       </div>
                     </button>
                   );
@@ -561,40 +554,39 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
         </div>
       </section>
 
-      {/* A-Z Vocabulary Index (pp. 109–111) */}
-      <section className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border-2 border-sky-200 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <section className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border-2 border-sky-200 space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-extrabold text-slate-900">
-              📖 A–Z 全書生字索引字典 Index（第 109–111 頁）
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              📖 A–Z 全書生字大字索引（第 109–111 頁）
             </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              共收錄 {allIndexedWords.length} 個課本詞彙，標註課次、頁碼、黑/藍/綠字級別與教育部 1,200 字詞 (*)。
+            <p className="text-base text-slate-600 font-bold mt-1">
+              共收錄 {allIndexedWords.length} 個課本詞彙，點擊任一單字立即發音！
             </p>
           </div>
 
-          <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <div className="relative w-full md:w-80">
+            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜尋英文或中文解釋..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-2xl border-2 border-slate-200 focus:border-sky-400 outline-none text-sm font-bold"
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-sky-400 outline-none text-lg font-extrabold"
             />
           </div>
         </div>
 
-        {/* Alphabet Filter Pills */}
-        <div className="flex flex-wrap gap-1">
+        {/* Big Touch Alphabet Filter Pills */}
+        <div className="flex flex-wrap gap-2">
           {alphabet.map((letter) => (
             <button
               key={letter}
               onClick={() => setLetterFilter(letter)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-extrabold cursor-pointer ${
+              className={`min-w-11 h-11 px-3 rounded-xl text-base font-extrabold cursor-pointer active:scale-90 ${
                 letterFilter === letter
-                  ? 'bg-sky-600 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-sky-600 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
               {letter}
@@ -602,37 +594,36 @@ export const GamesAndChecklist: React.FC<GamesAndChecklistProps> = ({
           ))}
         </div>
 
-        {/* Dictionary List */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-[520px] overflow-y-auto pr-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[640px] overflow-y-auto pr-1">
           {filteredIndexWords.map((item) => (
             <button
               key={item.key}
               onClick={() => speakEnglish(item.en)}
-              className="p-3 rounded-2xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 flex items-center justify-between text-left cursor-pointer transition"
+              className="p-4 sm:p-5 rounded-3xl border-2 border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 active:scale-[0.99] flex items-center justify-between text-left cursor-pointer transition"
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-2xl shrink-0">{item.emoji}</span>
+              <div className="flex items-center gap-3.5 min-w-0">
+                <span className="text-4xl shrink-0">{item.emoji}</span>
                 <div className="min-w-0">
-                  <div className="font-extrabold text-sm text-slate-900 truncate">
+                  <div className="font-extrabold text-xl sm:text-2xl text-slate-900 break-words">
                     {item.en} {item.moe1200 ? <span className="text-amber-600">*</span> : null}
                   </div>
-                  <div className="text-xs text-slate-600 truncate">{item.zh}</div>
+                  <div className="text-base sm:text-lg font-bold text-slate-600">{item.zh}</div>
                 </div>
               </div>
-              <div className="text-right shrink-0 ml-2">
+              <div className="text-right shrink-0 ml-3">
                 <span
-                  className={`inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                  className={`inline-block text-xs font-extrabold px-3 py-1 rounded-full ${
                     item.tier === 'core'
                       ? 'bg-slate-900 text-white'
                       : item.tier === 'phonics'
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-sky-100 text-sky-800'
+                        ? 'bg-emerald-100 text-emerald-900'
+                        : 'bg-sky-100 text-sky-900'
                   }`}
                 >
                   {item.unitBadge}
                 </span>
                 {item.page && (
-                  <div className="text-[10px] text-slate-400 font-bold mt-0.5">{item.page}</div>
+                  <div className="text-xs text-slate-500 font-bold mt-1">{item.page}</div>
                 )}
               </div>
             </button>
